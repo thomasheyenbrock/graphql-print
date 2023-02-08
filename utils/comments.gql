@@ -1,0 +1,69 @@
+# comment 1
+query 
+# comment 2
+Foo
+# comment 3
+(
+# comment 4
+$
+# comment 5
+bool
+# comment 6
+:
+# comment 7
+Boolean
+# comment 8
+!
+# comment 9
+) 
+# comment 10
+{
+# comment 11
+maybeId
+# comment 12
+:
+# comment 13
+id  
+# comment 14
+@
+# comment 15
+include
+# comment 16
+(
+# comment 17
+if
+# comment 18
+: 
+# comment 19
+$
+# comment 20
+bool
+# comment 21
+)
+# comment 22
+}
+# comment 23
+
+# comment 24
+query # comment 25
+Foo # comment 26
+( # comment 27
+$ # comment 28
+bool # comment 29
+: # comment 30
+Boolean # comment 31
+! # comment 32
+) # comment 33
+{ # comment 34
+maybeId # comment 35
+: # comment 36
+id # comment 37
+@# comment 38
+include # comment 39
+( # comment 40
+if # comment 41
+: # comment 42
+$ # comment 43
+bool # comment 44
+) # comment 45
+} # comment 46

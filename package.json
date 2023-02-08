@@ -1,0 +1,18 @@
+{
+  "name": "graphql-print",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsup src/index.ts",
+    "format": "prettier --write '**/*.{js,ts,json,md}'",
+    "test": "vitest"
+  },
+  "peerDependencies": {
+    "graphql": ">=15.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^2.8.4",
+    "tsup": "^6.5.0",
+    "vitest": "^0.28.4"
+  }
+}

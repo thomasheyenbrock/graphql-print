@@ -1,0 +1,2952 @@
+################################################################
+# Ignored tokens
+################################################################
+
+query,IgnoredTokens,{myField, ,,(myArg: 	 ,
+"myVal")#       some	comment
+	}
+
+################################################################
+# Lexical tokens
+################################################################
+
+{
+  myField(
+    intArg: 0
+    intArg: -0
+    intArg: 42
+    intArg: -42
+    floatArg: 0.43e44
+    floatArg: 0.43E44
+    floatArg: 0.43e+44
+    floatArg: 0.43E+44
+    floatArg: 0.43e-44
+    floatArg: 0.43E-44
+    floatArg: 0e44
+    floatArg: 0E44
+    floatArg: 0e+44
+    floatArg: 0E+44
+    floatArg: 0e-44
+    floatArg: 0E-44
+    floatArg: 0.43
+    floatArg: -0.43e44
+    floatArg: -0.43E44
+    floatArg: -0.43e+44
+    floatArg: -0.43E+44
+    floatArg: -0.43e-44
+    floatArg: -0.43E-44
+    floatArg: -0e44
+    floatArg: -0E44
+    floatArg: -0e+44
+    floatArg: -0E+44
+    floatArg: -0e-44
+    floatArg: -0E-44
+    floatArg: -0.43
+    floatArg: 42.43e44
+    floatArg: 42.43E44
+    floatArg: 42.43e+44
+    floatArg: 42.43E+44
+    floatArg: 42.43e-44
+    floatArg: 42.43E-44
+    floatArg: 42e44
+    floatArg: 42E44
+    floatArg: 42e+44
+    floatArg: 42E+44
+    floatArg: 42e-44
+    floatArg: 42E-44
+    floatArg: 42.43
+    floatArg: -42.43e44
+    floatArg: -42.43E44
+    floatArg: -42.43e+44
+    floatArg: -42.43E+44
+    floatArg: -42.43e-44
+    floatArg: -42.43E-44
+    floatArg: -42e44
+    floatArg: -42E44
+    floatArg: -42e+44
+    floatArg: -42E+44
+    floatArg: -42e-44
+    floatArg: -42E-44
+    floatArg: -42.43
+    stringArg: ""
+    stringArg: "stringValue"
+    stringArg: "string\u1234value"
+    stringArg: "stringሴvalue"
+    stringArg: "string\"\\\/\b\f\n\r\tvalue"
+    stringArg: "string	value"
+    stringArg: """"""
+    stringArg: """\""""""
+    stringArg: """string"value"""
+    stringArg: """string\"""value"""
+    stringArg: """
+    string
+
+      value
+    """
+  )
+  my123Name
+  _myName
+  _my_name
+}
+
+################################################################
+# OperationDefinition
+################################################################
+
+{
+  myField
+}
+
+query {
+  myField
+}
+
+query @myDirective {
+  myField
+}
+
+query @myDirective @myOtherDirective {
+  myField
+}
+
+query @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField
+}
+
+query @myDirective(myDirectiveArg: "myDirectiveArgValue") @myOtherDirective {
+  myField
+}
+
+query ($myVar: Int) {
+  myField
+}
+
+query ($myVar: Int) @myDirective {
+  myField
+}
+
+query ($myVar: Int) @myDirective @myOtherDirective {
+  myField
+}
+
+query ($myVar: Int) @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField
+}
+
+query ($myVar: Int)
+@myDirective(myDirectiveArg: "myDirectiveArgValue")
+@myOtherDirective {
+  myField
+}
+
+query NamedQuery {
+  myField
+}
+
+query NamedQuery @myDirective {
+  myField
+}
+
+query NamedQuery @myDirective @myOtherDirective {
+  myField
+}
+
+query NamedQuery @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField
+}
+
+query NamedQuery
+@myDirective(myDirectiveArg: "myDirectiveArgValue")
+@myOtherDirective {
+  myField
+}
+
+query NamedQuery($myVar: Int) {
+  myField
+}
+
+query NamedQuery($myVar: Int) @myDirective {
+  myField
+}
+
+query NamedQuery($myVar: Int) @myDirective @myOtherDirective {
+  myField
+}
+
+query NamedQuery($myVar: Int)
+@myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField
+}
+
+query NamedQuery($myVar: Int)
+@myDirective(myDirectiveArg: "myDirectiveArgValue")
+@myOtherDirective {
+  myField
+}
+
+mutation {
+  myField
+}
+
+mutation @myDirective {
+  myField
+}
+
+mutation @myDirective @myOtherDirective {
+  myField
+}
+
+mutation @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField
+}
+
+mutation @myDirective(myDirectiveArg: "myDirectiveArgValue") @myOtherDirective {
+  myField
+}
+
+mutation ($myVar: Int) {
+  myField
+}
+
+mutation ($myVar: Int) @myDirective {
+  myField
+}
+
+mutation ($myVar: Int) @myDirective @myOtherDirective {
+  myField
+}
+
+mutation ($myVar: Int) @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField
+}
+
+mutation ($myVar: Int)
+@myDirective(myDirectiveArg: "myDirectiveArgValue")
+@myOtherDirective {
+  myField
+}
+
+mutation NamedQuery {
+  myField
+}
+
+mutation NamedQuery @myDirective {
+  myField
+}
+
+mutation NamedQuery @myDirective @myOtherDirective {
+  myField
+}
+
+mutation NamedQuery @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField
+}
+
+mutation NamedQuery
+@myDirective(myDirectiveArg: "myDirectiveArgValue")
+@myOtherDirective {
+  myField
+}
+
+mutation NamedQuery($myVar: Int) {
+  myField
+}
+
+mutation NamedQuery($myVar: Int) @myDirective {
+  myField
+}
+
+mutation NamedQuery($myVar: Int) @myDirective @myOtherDirective {
+  myField
+}
+
+mutation NamedQuery($myVar: Int)
+@myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField
+}
+
+mutation NamedQuery($myVar: Int)
+@myDirective(myDirectiveArg: "myDirectiveArgValue")
+@myOtherDirective {
+  myField
+}
+
+subscription {
+  myField
+}
+
+subscription @myDirective {
+  myField
+}
+
+subscription @myDirective @myOtherDirective {
+  myField
+}
+
+subscription @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField
+}
+
+subscription
+@myDirective(myDirectiveArg: "myDirectiveArgValue")
+@myOtherDirective {
+  myField
+}
+
+subscription ($myVar: Int) {
+  myField
+}
+
+subscription ($myVar: Int) @myDirective {
+  myField
+}
+
+subscription ($myVar: Int) @myDirective @myOtherDirective {
+  myField
+}
+
+subscription ($myVar: Int) @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField
+}
+
+subscription ($myVar: Int)
+@myDirective(myDirectiveArg: "myDirectiveArgValue")
+@myOtherDirective {
+  myField
+}
+
+subscription NamedQuery {
+  myField
+}
+
+subscription NamedQuery @myDirective {
+  myField
+}
+
+subscription NamedQuery @myDirective @myOtherDirective {
+  myField
+}
+
+subscription NamedQuery @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField
+}
+
+subscription NamedQuery
+@myDirective(myDirectiveArg: "myDirectiveArgValue")
+@myOtherDirective {
+  myField
+}
+
+subscription NamedQuery($myVar: Int) {
+  myField
+}
+
+subscription NamedQuery($myVar: Int) @myDirective {
+  myField
+}
+
+subscription NamedQuery($myVar: Int) @myDirective @myOtherDirective {
+  myField
+}
+
+subscription NamedQuery($myVar: Int)
+@myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField
+}
+
+subscription NamedQuery($myVar: Int)
+@myDirective(myDirectiveArg: "myDirectiveArgValue")
+@myOtherDirective {
+  myField
+}
+
+################################################################
+# Field
+################################################################
+
+{
+  myField
+  myField {
+    myNestedField
+  }
+  myField @myDirective
+  myField @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  myField @myDirective @myOtherDirective
+  myField @myDirective(myDirectiveArg: "myDirectiveArgValue") @myOtherDirective
+  myField @myDirective {
+    myNestedField
+  }
+  myField @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+    myNestedField
+  }
+  myField @myDirective @myOtherDirective {
+    myNestedField
+  }
+  myField
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective {
+    myNestedField
+  }
+  myField(myArg: "myString")
+  myField(myArg: "myString") {
+    myNestedField
+  }
+  myField(myArg: "myString") @myDirective
+  myField(myArg: "myString") @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  myField(myArg: "myString") @myDirective @myOtherDirective
+  myField(myArg: "myString")
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective
+  myField(myArg: "myString") @myDirective {
+    myNestedField
+  }
+  myField(myArg: "myString")
+    @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+    myNestedField
+  }
+  myField(myArg: "myString") @myDirective @myOtherDirective {
+    myNestedField
+  }
+  myField(myArg: "myString")
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective {
+    myNestedField
+  }
+  myAlias: myField
+  myAlias: myField {
+    myNestedField
+  }
+  myAlias: myField @myDirective
+  myAlias: myField @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  myAlias: myField @myDirective @myOtherDirective
+  myAlias: myField
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective
+  myAlias: myField @myDirective {
+    myNestedField
+  }
+  myAlias: myField @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+    myNestedField
+  }
+  myAlias: myField @myDirective @myOtherDirective {
+    myNestedField
+  }
+  myAlias: myField
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective {
+    myNestedField
+  }
+  myAlias: myField(myArg: "myString")
+  myAlias: myField(myArg: "myString") {
+    myNestedField
+  }
+  myAlias: myField(myArg: "myString") @myDirective
+  myAlias: myField(myArg: "myString")
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  myAlias: myField(myArg: "myString") @myDirective @myOtherDirective
+  myAlias: myField(myArg: "myString")
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective
+  myAlias: myField(myArg: "myString") @myDirective {
+    myNestedField
+  }
+  myAlias: myField(myArg: "myString")
+    @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+    myNestedField
+  }
+  myAlias: myField(myArg: "myString") @myDirective @myOtherDirective {
+    myNestedField
+  }
+  myAlias: myField(myArg: "myString")
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective {
+    myNestedField
+  }
+}
+
+################################################################
+# Value
+################################################################
+
+query MyQuery($myVar: ID) {
+  myField(
+    varArg: $myVar
+    intArg: 42
+    floatArg: 42.43
+    stringArg: "myString"
+    booleanArg: true
+    booleanArg: false
+    nullArg: null
+    enumArg: MY_ENUM_VALUE
+    listArg: []
+    listArg: [42]
+    listArg: [42, 43]
+    objectArg: {}
+    objectArg: { myKey: "myValue" }
+    objectArg: { myKey: "myValue", myOtherKey: 42 }
+  )
+    @myDirective(
+      varArg: $myVar
+      intArg: 42
+      floatArg: 42.43
+      stringArg: "myString"
+      booleanArg: true
+      booleanArg: false
+      nullArg: null
+      enumArg: MY_ENUM_VALUE
+      listArg: []
+      listArg: [42]
+      listArg: [42, 43]
+      objectArg: {}
+      objectArg: { myKey: "myValue" }
+      objectArg: { myKey: "myValue", myOtherKey: 42 }
+    )
+}
+
+################################################################
+# FragmentSpread
+################################################################
+
+{
+  ...MyFragment
+  ...MyFragment @myDirective
+  ...MyFragment @myDirective @myOtherDirective
+  ...MyFragment @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  ...MyFragment
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective
+  ...MyFragment @myDirective(myDirectiveArg: $myVar)
+  ...MyFragment @myDirective(myDirectiveArg: $myVar) @myOtherDirective
+}
+
+################################################################
+# InlineFragment
+################################################################
+
+{
+  ... {
+    myField
+  }
+  ... @myDirective {
+    myField
+  }
+  ... @myDirective @myOtherDirective {
+    myField
+  }
+  ... @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+    myField
+  }
+  ... @myDirective(myDirectiveArg: "myDirectiveArgValue") @myOtherDirective {
+    myField
+  }
+  ... @myDirective(myDirectiveArg: $myVar) {
+    myField
+  }
+  ... @myDirective(myDirectiveArg: $myVar) @myOtherDirective {
+    myField
+  }
+  ... on MyType {
+    myField
+  }
+  ... on MyType @myDirective {
+    myField
+  }
+  ... on MyType @myDirective @myOtherDirective {
+    myField
+  }
+  ... on MyType @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+    myField
+  }
+  ... on MyType
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective {
+    myField
+  }
+  ... on MyType @myDirective(myDirectiveArg: $myVar) {
+    myField
+  }
+  ... on MyType @myDirective(myDirectiveArg: $myVar) @myOtherDirective {
+    myField
+  }
+}
+
+################################################################
+# Fragment definition
+################################################################
+
+fragment MyFragment on MyType {
+  myField
+}
+
+fragment MyFragment on MyType @myDirective {
+  myField
+}
+
+fragment MyFragment on MyType @myDirective @myOtherDirective {
+  myField
+}
+
+fragment MyFragment on MyType
+@myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField
+}
+
+fragment MyFragment on MyType
+@myDirective(myDirectiveArg: "myDirectiveArgValue")
+@myOtherDirective {
+  myField
+}
+
+fragment MyFragment on MyType @myDirective(myDirectiveArg: $myVar) {
+  myField
+}
+
+fragment MyFragment on MyType
+@myDirective(myDirectiveArg: $myVar)
+@myOtherDirective {
+  myField
+}
+
+################################################################
+# VariableDefinition
+################################################################
+
+query MyQuery(
+  $myVar: MyType
+  $myVar: MyType @myDirective
+  $myVar: MyType @myDirective @myOtherDirective
+  $myVar: MyType @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  $myVar: MyType
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective
+  $myVar: MyType = 42
+  $myVar: MyType = 42 @myDirective
+  $myVar: MyType = 42 @myDirective @myOtherDirective
+  $myVar: MyType = 42 @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  $myVar: MyType = 42
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective
+  $myVar: MyType = 42.43
+  $myVar: MyType = 42.43 @myDirective
+  $myVar: MyType = 42.43 @myDirective @myOtherDirective
+  $myVar: MyType = 42.43 @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  $myVar: MyType = 42.43
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective
+  $myVar: MyType = "myDefaultValue"
+  $myVar: MyType = "myDefaultValue" @myDirective
+  $myVar: MyType = "myDefaultValue" @myDirective @myOtherDirective
+  $myVar: MyType = "myDefaultValue"
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  $myVar: MyType = "myDefaultValue"
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective
+  $myVar: MyType = true
+  $myVar: MyType = true @myDirective
+  $myVar: MyType = true @myDirective @myOtherDirective
+  $myVar: MyType = true @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  $myVar: MyType = true
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective
+  $myVar: MyType = null
+  $myVar: MyType = null @myDirective
+  $myVar: MyType = null @myDirective @myOtherDirective
+  $myVar: MyType = null @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  $myVar: MyType = null
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective
+  $myVar: MyType = MY_ENUM_VALUE
+  $myVar: MyType = MY_ENUM_VALUE @myDirective
+  $myVar: MyType = MY_ENUM_VALUE @myDirective @myOtherDirective
+  $myVar: MyType = MY_ENUM_VALUE
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  $myVar: MyType = MY_ENUM_VALUE
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective
+  $myVar: MyType = [42, 43]
+  $myVar: MyType = [42, 43] @myDirective
+  $myVar: MyType = [42, 43] @myDirective @myOtherDirective
+  $myVar: MyType = [42, 43] @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  $myVar: MyType = [42, 43]
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective
+  $myVar: MyType = { myKey: "myValue" }
+  $myVar: MyType = { myKey: "myValue" } @myDirective
+  $myVar: MyType = { myKey: "myValue" } @myDirective @myOtherDirective
+  $myVar: MyType = { myKey: "myValue" }
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  $myVar: MyType = { myKey: "myValue" }
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective
+  $myVar: MyType!
+  $myVar: [MyType]
+  $myVar: [MyType!]
+  $myVar: [MyType]!
+  $myVar: [MyType!]!
+  $myVar: [[MyType]]
+) {
+  myField
+}
+
+################################################################
+# SchemaDefinition
+################################################################
+
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+"My description"
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+schema @myDirective {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+schema @myDirective @myOtherDirective {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+"My description"
+schema @myDirective {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+"My description"
+schema @myDirective @myOtherDirective {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+schema @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+schema @myDirective(myDirectiveArg: "myDirectiveArgValue") @myOtherDirective {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+"My description"
+schema @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+"My description"
+schema @myDirective(myDirectiveArg: "myDirectiveArgValue") @myOtherDirective {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+################################################################
+# Schema extension
+################################################################
+
+extend schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+extend schema @myDirective {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+extend schema @myDirective @myOtherDirective {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+extend schema @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+extend schema @myDirective(myDirectiveArg: "myDirectiveArgValue") @myOtherDirective {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+extend schema @myDirective
+
+extend schema @myDirective @myOtherDirective
+
+extend schema @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+extend schema @myDirective(myDirectiveArg: "myDirectiveArgValue") @myOtherDirective
+
+################################################################
+# ScalarTypeDefinition
+################################################################
+
+scalar MyScalar
+
+"My description"
+scalar MyScalar
+
+scalar MyScalar @myDirective
+
+"My description"
+scalar MyScalar @myDirective
+
+scalar MyScalar @myDirective @myOtherDirective
+
+"My description"
+scalar MyScalar @myDirective @myOtherDirective
+
+scalar MyScalar
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+"My description"
+scalar MyScalar
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+################################################################
+# ScalarTypeExtension
+################################################################
+
+extend scalar MyScalar @myDirective
+
+extend scalar MyScalar @myDirective @myOtherDirective
+
+extend scalar MyScalar @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+extend scalar MyScalar
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+################################################################
+# ObjectTypeDefinition
+################################################################
+
+type MyObjectType
+
+"My description"
+type MyObjectType
+
+type MyObjectType @myDirective
+
+"My description"
+type MyObjectType @myDirective
+
+type MyObjectType @myDirective @myOtherDirective
+
+"My description"
+type MyObjectType @myDirective @myOtherDirective
+
+type MyObjectType @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+"My description"
+type MyObjectType @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+type MyObjectType
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+"My description"
+type MyObjectType
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+type MyObjectType implements MyInterface
+
+"My description"
+type MyObjectType implements MyInterface
+
+type MyObjectType implements MyInterface @myDirective
+
+"My description"
+type MyObjectType implements MyInterface @myDirective
+
+type MyObjectType implements MyInterface @myDirective @myOtherDirective
+
+"My description"
+type MyObjectType implements MyInterface @myDirective @myOtherDirective
+
+type MyObjectType implements MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+"My description"
+type MyObjectType implements MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+type MyObjectType implements MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+"My description"
+type MyObjectType implements MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+type MyObjectType implements & MyInterface
+
+"My description"
+type MyObjectType implements & MyInterface
+
+type MyObjectType implements & MyInterface @myDirective
+
+"My description"
+type MyObjectType implements & MyInterface @myDirective
+
+type MyObjectType implements & MyInterface @myDirective @myOtherDirective
+
+"My description"
+type MyObjectType implements & MyInterface @myDirective @myOtherDirective
+
+type MyObjectType implements & MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+"My description"
+type MyObjectType implements & MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+type MyObjectType implements & MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+"My description"
+type MyObjectType implements & MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+type MyObjectType implements MyInterface & MyOtherInterface
+
+"My description"
+type MyObjectType implements MyInterface & MyOtherInterface
+
+type MyObjectType implements MyInterface & MyOtherInterface @myDirective
+
+"My description"
+type MyObjectType implements MyInterface & MyOtherInterface @myDirective
+
+type MyObjectType implements MyInterface & MyOtherInterface
+  @myDirective
+  @myOtherDirective
+
+"My description"
+type MyObjectType implements MyInterface & MyOtherInterface
+  @myDirective
+  @myOtherDirective
+
+type MyObjectType implements MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+"My description"
+type MyObjectType implements MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+type MyObjectType implements MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+"My description"
+type MyObjectType implements MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+type MyObjectType implements & MyInterface & MyOtherInterface
+
+"My description"
+type MyObjectType implements & MyInterface & MyOtherInterface
+
+type MyObjectType implements & MyInterface & MyOtherInterface @myDirective
+
+"My description"
+type MyObjectType implements & MyInterface & MyOtherInterface @myDirective
+
+type MyObjectType implements & MyInterface & MyOtherInterface
+  @myDirective
+  @myOtherDirective
+
+"My description"
+type MyObjectType implements & MyInterface & MyOtherInterface
+  @myDirective
+  @myOtherDirective
+
+type MyObjectType implements & MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+"My description"
+type MyObjectType implements & MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+type MyObjectType implements & MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+"My description"
+type MyObjectType implements & MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+type MyObjectType {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType {
+  myField: MyType
+}
+
+type MyObjectType @myDirective {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType @myDirective {
+  myField: MyType
+}
+
+type MyObjectType @myDirective @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType @myDirective @myOtherDirective {
+  myField: MyType
+}
+
+type MyObjectType @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+type MyObjectType
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+type MyObjectType implements MyInterface {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType implements MyInterface {
+  myField: MyType
+}
+
+type MyObjectType implements MyInterface @myDirective {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType implements MyInterface @myDirective {
+  myField: MyType
+}
+
+type MyObjectType implements MyInterface @myDirective @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType implements MyInterface @myDirective @myOtherDirective {
+  myField: MyType
+}
+
+type MyObjectType implements MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType implements MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+type MyObjectType implements MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType implements MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+type MyObjectType implements & MyInterface {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType implements & MyInterface {
+  myField: MyType
+}
+
+type MyObjectType implements & MyInterface @myDirective {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType implements & MyInterface @myDirective {
+  myField: MyType
+}
+
+type MyObjectType implements & MyInterface @myDirective @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType implements & MyInterface @myDirective @myOtherDirective {
+  myField: MyType
+}
+
+type MyObjectType implements & MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType implements & MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+type MyObjectType implements & MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType implements & MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+type MyObjectType implements MyInterface & MyOtherInterface {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType implements MyInterface & MyOtherInterface {
+  myField: MyType
+}
+
+type MyObjectType implements MyInterface & MyOtherInterface @myDirective {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType implements MyInterface & MyOtherInterface @myDirective {
+  myField: MyType
+}
+
+type MyObjectType implements MyInterface & MyOtherInterface
+  @myDirective
+  @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType implements MyInterface & MyOtherInterface
+  @myDirective
+  @myOtherDirective {
+  myField: MyType
+}
+
+type MyObjectType implements MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType implements MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+type MyObjectType implements MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType implements MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+type MyObjectType implements & MyInterface & MyOtherInterface {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType implements & MyInterface & MyOtherInterface {
+  myField: MyType
+}
+
+type MyObjectType implements & MyInterface & MyOtherInterface @myDirective {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType implements & MyInterface & MyOtherInterface @myDirective {
+  myField: MyType
+}
+
+type MyObjectType implements & MyInterface & MyOtherInterface
+  @myDirective
+  @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType implements & MyInterface & MyOtherInterface
+  @myDirective
+  @myOtherDirective {
+  myField: MyType
+}
+
+type MyObjectType implements & MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType implements & MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+type MyObjectType implements & MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+type MyObjectType implements & MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+################################################################
+# ObjectTypeExtension
+################################################################
+
+extend type MyObjectType {
+  myField: MyType
+}
+
+extend type MyObjectType @myDirective {
+  myField: MyType
+}
+
+extend type MyObjectType @myDirective @myOtherDirective {
+  myField: MyType
+}
+
+extend type MyObjectType @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+extend type MyObjectType
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+extend type MyObjectType implements MyInterface {
+  myField: MyType
+}
+
+extend type MyObjectType implements MyInterface @myDirective {
+  myField: MyType
+}
+
+extend type MyObjectType implements MyInterface @myDirective @myOtherDirective {
+  myField: MyType
+}
+
+extend type MyObjectType implements MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+extend type MyObjectType implements MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+extend type MyObjectType implements & MyInterface {
+  myField: MyType
+}
+
+extend type MyObjectType implements & MyInterface @myDirective {
+  myField: MyType
+}
+
+extend type MyObjectType implements & MyInterface
+  @myDirective
+  @myOtherDirective {
+  myField: MyType
+}
+
+extend type MyObjectType implements & MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+extend type MyObjectType implements & MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+extend type MyObjectType implements MyInterface & MyOtherInterface {
+  myField: MyType
+}
+
+extend type MyObjectType implements MyInterface & MyOtherInterface
+  @myDirective {
+  myField: MyType
+}
+
+extend type MyObjectType implements MyInterface & MyOtherInterface
+  @myDirective
+  @myOtherDirective {
+  myField: MyType
+}
+
+extend type MyObjectType implements MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+extend type MyObjectType implements MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+extend type MyObjectType implements & MyInterface & MyOtherInterface {
+  myField: MyType
+}
+
+extend type MyObjectType implements & MyInterface & MyOtherInterface @myDirective {
+  myField: MyType
+}
+
+extend type MyObjectType implements & MyInterface & MyOtherInterface
+  @myDirective
+  @myOtherDirective {
+  myField: MyType
+}
+
+extend type MyObjectType implements & MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+extend type MyObjectType implements & MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+extend type MyObjectType @myDirective
+
+extend type MyObjectType @myDirective @myOtherDirective
+
+extend type MyObjectType @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+extend type MyObjectType
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+extend type MyObjectType implements MyInterface @myDirective
+
+extend type MyObjectType implements MyInterface @myDirective @myOtherDirective
+
+extend type MyObjectType implements MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+extend type MyObjectType implements MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+extend type MyObjectType implements & MyInterface @myDirective
+
+extend type MyObjectType implements & MyInterface
+  @myDirective
+  @myOtherDirective
+
+extend type MyObjectType implements & MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+extend type MyObjectType implements & MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+extend type MyObjectType implements MyInterface & MyOtherInterface @myDirective
+
+extend type MyObjectType implements MyInterface & MyOtherInterface
+  @myDirective
+  @myOtherDirective
+
+extend type MyObjectType implements MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+extend type MyObjectType implements MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+extend type MyObjectType implements & MyInterface & MyOtherInterface @myDirective
+
+extend type MyObjectType implements & MyInterface & MyOtherInterface
+  @myDirective
+  @myOtherDirective
+
+extend type MyObjectType implements & MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+extend type MyObjectType implements & MyInterface & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+extend type MyObjectType implements MyInterface
+
+extend type MyObjectType implements & MyInterface
+
+extend type MyObjectType implements MyInterface & MyOtherInterface
+
+extend type MyObjectType implements & MyInterface & MyOtherInterface
+
+################################################################
+# FieldDefinition
+################################################################
+
+type MyObjectType {
+  myField: MyType
+
+  "My description"
+  myField: MyType
+
+  myField(myArg: MyType): MyType
+
+  "My description"
+  myField(myArg: MyType): MyType
+
+  myField: MyType @myDirective
+
+  "My description"
+  myField: MyType @myDirective
+
+  myField: MyType @myDirective @myOtherDirective
+
+  "My description"
+  myField: MyType @myDirective @myOtherDirective
+
+  myField: MyType @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+  "My description"
+  myField: MyType @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+  myField: MyType
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective
+
+  "My description"
+  myField: MyType
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective
+
+  myField(myArg: MyType): MyType @myDirective
+
+  "My description"
+  myField(myArg: MyType): MyType @myDirective
+
+  myField(myArg: MyType): MyType @myDirective @myOtherDirective
+
+  "My description"
+  myField(myArg: MyType): MyType @myDirective @myOtherDirective
+
+  myField(myArg: MyType): MyType
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+  "My description"
+  myField(myArg: MyType): MyType
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+  myField(myArg: MyType): MyType
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective
+
+  "My description"
+  myField(myArg: MyType): MyType
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective
+}
+
+################################################################
+# InputValueDefinition
+################################################################
+
+type MyObjectType {
+  myField(
+    myArg: MyType
+
+    "My description"
+    myArg: MyType
+
+    myArg: MyType = "myDefaultValue"
+
+    "My description"
+    myArg: MyType = "myDefaultValue"
+
+    myArg: MyType @myDirective
+
+    "My description"
+    myArg: MyType @myDirective
+
+    myArg: MyType @myDirective @myOtherDirective
+
+    "My description"
+    myArg: MyType @myDirective @myOtherDirective
+
+    myArg: MyType @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+    "My description"
+    myArg: MyType @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+    myArg: MyType
+      @myDirective(myDirectiveArg: "myDirectiveArgValue")
+      @myOtherDirective
+
+    "My description"
+    myArg: MyType
+      @myDirective(myDirectiveArg: "myDirectiveArgValue")
+      @myOtherDirective
+
+    myArg: MyType = "myDefaultValue" @myDirective
+
+    "My description"
+    myArg: MyType = "myDefaultValue" @myDirective
+
+    myArg: MyType = "myDefaultValue" @myDirective @myOtherDirective
+
+    "My description"
+    myArg: MyType = "myDefaultValue" @myDirective @myOtherDirective
+
+    myArg: MyType = "myDefaultValue"
+      @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+    "My description"
+    myArg: MyType = "myDefaultValue"
+      @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+    myArg: MyType = "myDefaultValue"
+      @myDirective(myDirectiveArg: "myDirectiveArgValue")
+      @myOtherDirective
+
+    "My description"
+    myArg: MyType = "myDefaultValue"
+      @myDirective(myDirectiveArg: "myDirectiveArgValue")
+      @myOtherDirective
+  ): MyType
+}
+
+################################################################
+# InterfaceTypeDefinition
+################################################################
+
+interface MyInterface {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface {
+  myField: MyType
+}
+
+interface MyInterface implements MyOtherInterface {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface implements MyOtherInterface {
+  myField: MyType
+}
+
+interface MyInterface implements & MyOtherInterface {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface implements & MyOtherInterface {
+  myField: MyType
+}
+
+interface MyInterface implements MyOtherInterface & AnotherInterface {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface implements MyOtherInterface & AnotherInterface {
+  myField: MyType
+}
+
+interface MyInterface implements & MyOtherInterface & AnotherInterface {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface implements & MyOtherInterface & AnotherInterface {
+  myField: MyType
+}
+
+interface MyInterface @myDirective {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface @myDirective {
+  myField: MyType
+}
+
+interface MyInterface @myDirective @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface @myDirective @myOtherDirective {
+  myField: MyType
+}
+
+interface MyInterface @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+interface MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+interface MyInterface implements MyOtherInterface @myDirective {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface implements MyOtherInterface @myDirective {
+  myField: MyType
+}
+
+interface MyInterface implements MyOtherInterface
+  @myDirective
+  @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface implements MyOtherInterface
+  @myDirective
+  @myOtherDirective {
+  myField: MyType
+}
+
+interface MyInterface implements MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface implements MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+interface MyInterface implements MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface implements MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+interface MyInterface implements & MyOtherInterface @myDirective {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface implements & MyOtherInterface @myDirective {
+  myField: MyType
+}
+
+interface MyInterface implements & MyOtherInterface
+  @myDirective
+  @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface implements & MyOtherInterface
+  @myDirective
+  @myOtherDirective {
+  myField: MyType
+}
+
+interface MyInterface implements & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface implements & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+interface MyInterface implements & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface implements & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective {
+  myField: MyType
+}
+
+interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective
+  @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective
+  @myOtherDirective {
+  myField: MyType
+}
+
+interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective {
+  myField: MyType
+}
+
+interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective
+  @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective
+  @myOtherDirective {
+  myField: MyType
+}
+
+interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+interface MyInterface
+
+"My description"
+interface MyInterface
+
+interface MyInterface implements MyOtherInterface
+
+"My description"
+interface MyInterface implements MyOtherInterface
+
+interface MyInterface implements & MyOtherInterface
+
+"My description"
+interface MyInterface implements & MyOtherInterface
+
+interface MyInterface implements MyOtherInterface & AnotherInterface
+
+"My description"
+interface MyInterface implements MyOtherInterface & AnotherInterface
+
+interface MyInterface implements & MyOtherInterface & AnotherInterface
+
+"My description"
+interface MyInterface implements & MyOtherInterface & AnotherInterface
+
+interface MyInterface @myDirective
+
+"My description"
+interface MyInterface @myDirective
+
+interface MyInterface @myDirective @myOtherDirective
+
+"My description"
+interface MyInterface @myDirective @myOtherDirective
+
+interface MyInterface @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+"My description"
+interface MyInterface @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+interface MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+"My description"
+interface MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+interface MyInterface implements MyOtherInterface @myDirective
+
+"My description"
+interface MyInterface implements MyOtherInterface @myDirective
+
+interface MyInterface implements MyOtherInterface @myDirective @myOtherDirective
+
+"My description"
+interface MyInterface implements MyOtherInterface @myDirective @myOtherDirective
+
+interface MyInterface implements MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+"My description"
+interface MyInterface implements MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+interface MyInterface implements MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+"My description"
+interface MyInterface implements MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+interface MyInterface implements & MyOtherInterface @myDirective
+
+"My description"
+interface MyInterface implements & MyOtherInterface @myDirective
+
+interface MyInterface implements & MyOtherInterface @myDirective @myOtherDirective
+
+"My description"
+interface MyInterface implements & MyOtherInterface @myDirective @myOtherDirective
+
+interface MyInterface implements & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+"My description"
+interface MyInterface implements & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+interface MyInterface implements & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+"My description"
+interface MyInterface implements & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective
+
+"My description"
+interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective
+
+interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective
+  @myOtherDirective
+
+"My description"
+interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective
+  @myOtherDirective
+
+interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+"My description"
+interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+"My description"
+interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective
+
+"My description"
+interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective
+
+interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective
+  @myOtherDirective
+
+"My description"
+interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective
+  @myOtherDirective
+
+interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+"My description"
+interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+"My description"
+interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+################################################################
+# InterfaceTypeExtension
+################################################################
+
+extend interface MyInterface {
+  myField: MyType
+}
+
+extend interface MyInterface implements MyOtherInterface {
+  myField: MyType
+}
+
+extend interface MyInterface implements & MyOtherInterface {
+  myField: MyType
+}
+
+extend interface MyInterface implements MyOtherInterface & AnotherInterface {
+  myField: MyType
+}
+
+extend interface MyInterface implements & MyOtherInterface & AnotherInterface {
+  myField: MyType
+}
+
+extend interface MyInterface @myDirective {
+  myField: MyType
+}
+
+extend interface MyInterface @myDirective @myOtherDirective {
+  myField: MyType
+}
+
+extend interface MyInterface implements MyOtherInterface @myDirective {
+  myField: MyType
+}
+
+extend interface MyInterface implements MyOtherInterface
+  @myDirective
+  @myOtherDirective {
+  myField: MyType
+}
+
+extend interface MyInterface implements & MyOtherInterface @myDirective {
+  myField: MyType
+}
+
+extend interface MyInterface implements & MyOtherInterface
+  @myDirective
+  @myOtherDirective {
+  myField: MyType
+}
+
+extend interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective {
+  myField: MyType
+}
+
+extend interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective
+  @myOtherDirective {
+  myField: MyType
+}
+
+extend interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective {
+  myField: MyType
+}
+
+extend interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective
+  @myOtherDirective {
+  myField: MyType
+}
+
+extend interface MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+extend interface MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+extend interface MyInterface implements MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+extend interface MyInterface implements MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+extend interface MyInterface implements & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+extend interface MyInterface implements & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+extend interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+extend interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+extend interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+extend interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+extend interface MyInterface @myDirective
+
+extend interface MyInterface @myDirective @myOtherDirective
+
+extend interface MyInterface implements MyOtherInterface @myDirective
+
+extend interface MyInterface implements MyOtherInterface
+  @myDirective
+  @myOtherDirective
+
+extend interface MyInterface implements & MyOtherInterface @myDirective
+
+extend interface MyInterface implements & MyOtherInterface
+  @myDirective
+  @myOtherDirective
+
+extend interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective
+
+extend interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective
+  @myOtherDirective
+
+extend interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective
+
+extend interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective
+  @myOtherDirective
+
+extend interface MyInterface @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+extend interface MyInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+extend interface MyInterface implements MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+extend interface MyInterface implements MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+extend interface MyInterface implements & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+extend interface MyInterface implements & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+extend interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+extend interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+extend interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+extend interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+extend interface MyInterface implements MyOtherInterface
+
+extend interface MyInterface implements & MyOtherInterface
+
+extend interface MyInterface implements MyOtherInterface & AnotherInterface
+
+extend interface MyInterface implements & MyOtherInterface & AnotherInterface
+
+extend interface MyInterface implements MyOtherInterface @myDirective
+
+extend interface MyInterface implements MyOtherInterface
+  @myDirective
+  @myOtherDirective
+
+extend interface MyInterface implements & MyOtherInterface @myDirective
+
+extend interface MyInterface implements & MyOtherInterface
+  @myDirective
+  @myOtherDirective
+
+extend interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective
+
+extend interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective
+  @myOtherDirective
+
+extend interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective
+
+extend interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective
+  @myOtherDirective
+
+extend interface MyInterface implements MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+extend interface MyInterface implements MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+extend interface MyInterface implements & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+extend interface MyInterface implements & MyOtherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+extend interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+extend interface MyInterface implements MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+extend interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+extend interface MyInterface implements & MyOtherInterface & AnotherInterface
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+################################################################
+# UnionTypeDefinition
+################################################################
+
+union MyUnion
+
+"My description"
+union MyUnion
+
+union MyUnion = MyType
+
+"My description"
+union MyUnion = MyType
+
+union MyUnion = | MyType
+
+"My description"
+union MyUnion = | MyType
+
+union MyUnion = MyType | MyOtherType
+
+"My description"
+union MyUnion = MyType | MyOtherType
+
+union MyUnion = | MyType | MyOtherType
+
+"My description"
+union MyUnion = | MyType | MyOtherType
+
+union MyUnion @myDirective
+
+"My description"
+union MyUnion @myDirective
+
+union MyUnion @myDirective @myOtherDirective
+
+"My description"
+union MyUnion @myDirective @myOtherDirective
+
+union MyUnion @myDirective = MyType
+
+"My description"
+union MyUnion @myDirective = MyType
+
+union MyUnion @myDirective @myOtherDirective = MyType
+
+"My description"
+union MyUnion @myDirective @myOtherDirective = MyType
+
+union MyUnion @myDirective = | MyType
+
+"My description"
+union MyUnion @myDirective = | MyType
+
+union MyUnion @myDirective @myOtherDirective = | MyType
+
+"My description"
+union MyUnion @myDirective @myOtherDirective = | MyType
+
+union MyUnion @myDirective = MyType | MyOtherType
+
+"My description"
+union MyUnion @myDirective = MyType | MyOtherType
+
+union MyUnion @myDirective @myOtherDirective = MyType | MyOtherType
+
+"My description"
+union MyUnion @myDirective @myOtherDirective = MyType | MyOtherType
+
+union MyUnion @myDirective = | MyType | MyOtherType
+
+"My description"
+union MyUnion @myDirective = | MyType | MyOtherType
+
+union MyUnion @myDirective @myOtherDirective = | MyType | MyOtherType
+
+"My description"
+union MyUnion @myDirective @myOtherDirective = | MyType | MyOtherType
+
+union MyUnion @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+"My description"
+union MyUnion @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+union MyUnion
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+"My description"
+union MyUnion
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+union MyUnion @myDirective(myDirectiveArg: "myDirectiveArgValue") = MyType
+
+"My description"
+union MyUnion @myDirective(myDirectiveArg: "myDirectiveArgValue") = MyType
+
+union MyUnion
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective =
+    MyType
+
+"My description"
+union MyUnion
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective =
+    MyType
+
+union MyUnion @myDirective(myDirectiveArg: "myDirectiveArgValue") = | MyType
+
+"My description"
+union MyUnion @myDirective(myDirectiveArg: "myDirectiveArgValue") = | MyType
+
+union MyUnion
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective =
+  | MyType
+
+"My description"
+union MyUnion
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective =
+  | MyType
+
+union MyUnion @myDirective(myDirectiveArg: "myDirectiveArgValue") =
+    MyType
+  | MyOtherType
+
+"My description"
+union MyUnion @myDirective(myDirectiveArg: "myDirectiveArgValue") =
+    MyType
+  | MyOtherType
+
+union MyUnion
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective =
+    MyType
+  | MyOtherType
+
+"My description"
+union MyUnion
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective =
+    MyType
+  | MyOtherType
+
+union MyUnion @myDirective(myDirectiveArg: "myDirectiveArgValue") =
+  | MyType
+  | MyOtherType
+
+"My description"
+union MyUnion @myDirective(myDirectiveArg: "myDirectiveArgValue") =
+  | MyType
+  | MyOtherType
+
+union MyUnion
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective =
+  | MyType
+  | MyOtherType
+
+"My description"
+union MyUnion
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective =
+  | MyType
+  | MyOtherType
+
+################################################################
+# UnionTypeExtension
+################################################################
+
+extend union MyUnion = MyType
+
+extend union MyUnion = | MyType
+
+extend union MyUnion = MyType | MyOtherType
+
+extend union MyUnion = | MyType | MyOtherType
+
+extend union MyUnion @myDirective = MyType
+
+extend union MyUnion @myDirective @myOtherDirective = MyType
+
+extend union MyUnion @myDirective = | MyType
+
+extend union MyUnion @myDirective @myOtherDirective = | MyType
+
+extend union MyUnion @myDirective = MyType | MyOtherType
+
+extend union MyUnion @myDirective @myOtherDirective = MyType | MyOtherType
+
+extend union MyUnion @myDirective = | MyType | MyOtherType
+
+extend union MyUnion @myDirective @myOtherDirective = | MyType | MyOtherType
+
+extend union MyUnion @myDirective(myDirectiveArg: "myDirectiveArgValue") =
+    MyType
+
+extend union MyUnion
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective =
+    MyType
+
+extend union MyUnion @myDirective(myDirectiveArg: "myDirectiveArgValue") =
+  | MyType
+
+extend union MyUnion
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective =
+  | MyType
+
+extend union MyUnion @myDirective(myDirectiveArg: "myDirectiveArgValue") =
+    MyType
+  | MyOtherType
+
+extend union MyUnion
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective =
+    MyType
+  | MyOtherType
+
+extend union MyUnion @myDirective(myDirectiveArg: "myDirectiveArgValue") =
+  | MyType
+  | MyOtherType
+
+extend union MyUnion
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective =
+  | MyType
+  | MyOtherType
+
+extend union MyUnion @myDirective
+
+extend union MyUnion @myDirective @myOtherDirective
+
+extend union MyUnion @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+extend union MyUnion
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+################################################################
+# EnumTypeDefinition
+################################################################
+
+enum MyEnum {
+  MY_ENUM
+}
+
+"My description"
+enum MyEnum {
+  MY_ENUM
+}
+
+enum MyEnum @myDirective {
+  MY_ENUM
+}
+
+"My description"
+enum MyEnum @myDirective {
+  MY_ENUM
+}
+
+enum MyEnum @myDirective @myOtherDirective {
+  MY_ENUM
+}
+
+"My description"
+enum MyEnum @myDirective @myOtherDirective {
+  MY_ENUM
+}
+
+enum MyEnum @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  MY_ENUM
+}
+
+"My description"
+enum MyEnum @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  MY_ENUM
+}
+
+enum MyEnum
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  MY_ENUM
+}
+
+"My description"
+enum MyEnum
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  MY_ENUM
+}
+
+enum MyEnum
+
+"My description"
+enum MyEnum
+
+enum MyEnum @myDirective
+
+"My description"
+enum MyEnum @myDirective
+
+enum MyEnum @myDirective @myOtherDirective
+
+"My description"
+enum MyEnum @myDirective @myOtherDirective
+
+enum MyEnum @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+"My description"
+enum MyEnum @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+enum MyEnum
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+"My description"
+enum MyEnum
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+################################################################
+# EnumValueDefinition
+################################################################
+
+enum MyEnum {
+  MY_ENUM
+
+  "My description"
+  MY_ENUM
+
+  MY_ENUM @myDirective
+
+  "My description"
+  MY_ENUM @myDirective
+
+  MY_ENUM @myDirective @myOtherDirective
+
+  "My description"
+  MY_ENUM @myDirective @myOtherDirective
+
+  MY_ENUM @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+  "My description"
+  MY_ENUM @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+  MY_ENUM @myDirective(myDirectiveArg: "myDirectiveArgValue") @myOtherDirective
+
+  "My description"
+  MY_ENUM @myDirective(myDirectiveArg: "myDirectiveArgValue") @myOtherDirective
+}
+
+################################################################
+# EnumTypeExtensions
+################################################################
+
+extend enum MyEnum {
+  MY_ENUM
+}
+
+extend enum MyEnum @myDirective {
+  MY_ENUM
+}
+
+extend enum MyEnum @myDirective @myOtherDirective {
+  MY_ENUM
+}
+
+extend enum MyEnum @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  MY_ENUM
+}
+
+extend enum MyEnum
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  MY_ENUM
+}
+
+extend enum MyEnum @myDirective
+
+extend enum MyEnum @myDirective @myOtherDirective
+
+extend enum MyEnum @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+extend enum MyEnum
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+################################################################
+# InputObjectTypeDefinition
+################################################################
+
+input MyInput {
+  myField: MyType
+}
+
+"My description"
+input MyInput {
+  myField: MyType
+}
+
+input MyInput @myDirective {
+  myField: MyType
+}
+
+"My description"
+input MyInput @myDirective {
+  myField: MyType
+}
+
+input MyInput @myDirective @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+input MyInput @myDirective @myOtherDirective {
+  myField: MyType
+}
+
+input MyInput @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+"My description"
+input MyInput @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+input MyInput
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+"My description"
+input MyInput
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+input MyInput
+
+"My description"
+input MyInput
+
+input MyInput @myDirective
+
+"My description"
+input MyInput @myDirective
+
+input MyInput @myDirective @myOtherDirective
+
+"My description"
+input MyInput @myDirective @myOtherDirective
+
+input MyInput @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+"My description"
+input MyInput @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+input MyInput
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+"My description"
+input MyInput
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+################################################################
+# InputValueDefinition
+################################################################
+
+input MyInput {
+  myField: MyType
+
+  "My description"
+  myField: MyType
+
+  myField: MyType = "myDefaultValue"
+
+  "My description"
+  myField: MyType = "myDefaultValue"
+
+  myField: MyType @myDirective
+
+  "My description"
+  myField: MyType @myDirective
+
+  myField: MyType = "myDefaultValue" @myDirective
+
+  "My description"
+  myField: MyType = "myDefaultValue" @myDirective
+
+  myField: MyType @myDirective @myOtherDirective
+
+  "My description"
+  myField: MyType @myDirective @myOtherDirective
+
+  myField: MyType = "myDefaultValue" @myDirective @myOtherDirective
+
+  "My description"
+  myField: MyType = "myDefaultValue" @myDirective @myOtherDirective
+
+  myField: MyType @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+  "My description"
+  myField: MyType @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+  myField: MyType = "myDefaultValue"
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+  "My description"
+  myField: MyType = "myDefaultValue"
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+  myField: MyType
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective
+
+  "My description"
+  myField: MyType
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective
+
+  myField: MyType = "myDefaultValue"
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective
+
+  "My description"
+  myField: MyType = "myDefaultValue"
+    @myDirective(myDirectiveArg: "myDirectiveArgValue")
+    @myOtherDirective
+}
+
+################################################################
+# InputObjectTypeExtension
+################################################################
+
+extend input MyInput {
+  myField: MyType
+}
+
+extend input MyInput @myDirective {
+  myField: MyType
+}
+
+extend input MyInput @myDirective @myOtherDirective {
+  myField: MyType
+}
+
+extend input MyInput @myDirective(myDirectiveArg: "myDirectiveArgValue") {
+  myField: MyType
+}
+
+extend input MyInput
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective {
+  myField: MyType
+}
+
+extend input MyInput @myDirective
+
+extend input MyInput @myDirective @myOtherDirective
+
+extend input MyInput @myDirective(myDirectiveArg: "myDirectiveArgValue")
+
+extend input MyInput
+  @myDirective(myDirectiveArg: "myDirectiveArgValue")
+  @myOtherDirective
+
+################################################################
+# DirectiveDefinition
+################################################################
+
+directive @myDirective on QUERY
+
+"My description"
+directive @myDirective on QUERY
+
+directive @myDirective on | QUERY
+
+"My description"
+directive @myDirective on | QUERY
+
+directive @myDirective on QUERY | SCHEMA
+
+"My description"
+directive @myDirective on QUERY | SCHEMA
+
+directive @myDirective on | QUERY | SCHEMA
+
+"My description"
+directive @myDirective on | QUERY | SCHEMA
+
+directive @myDirective repeatable on QUERY
+
+"My description"
+directive @myDirective repeatable on QUERY
+
+directive @myDirective repeatable on | QUERY
+
+"My description"
+directive @myDirective repeatable on | QUERY
+
+directive @myDirective repeatable on QUERY | SCHEMA
+
+"My description"
+directive @myDirective repeatable on QUERY | SCHEMA
+
+directive @myDirective repeatable on | QUERY | SCHEMA
+
+"My description"
+directive @myDirective repeatable on | QUERY | SCHEMA
+
+directive @myDirective(myDirectiveArg: MyType) on QUERY
+
+"My description"
+directive @myDirective(myDirectiveArg: MyType) on QUERY
+
+directive @myDirective(myDirectiveArg: MyType) on | QUERY
+
+"My description"
+directive @myDirective(myDirectiveArg: MyType) on | QUERY
+
+directive @myDirective(myDirectiveArg: MyType) on QUERY | SCHEMA
+
+"My description"
+directive @myDirective(myDirectiveArg: MyType) on QUERY | SCHEMA
+
+directive @myDirective(myDirectiveArg: MyType) on | QUERY | SCHEMA
+
+"My description"
+directive @myDirective(myDirectiveArg: MyType) on | QUERY | SCHEMA
+
+directive @myDirective(myDirectiveArg: MyType) repeatable on QUERY
+
+"My description"
+directive @myDirective(myDirectiveArg: MyType) repeatable on QUERY
+
+directive @myDirective(myDirectiveArg: MyType) repeatable on | QUERY
+
+"My description"
+directive @myDirective(myDirectiveArg: MyType) repeatable on | QUERY
+
+directive @myDirective(myDirectiveArg: MyType) repeatable on QUERY | SCHEMA
+
+"My description"
+directive @myDirective(myDirectiveArg: MyType) repeatable on QUERY | SCHEMA
+
+directive @myDirective(myDirectiveArg: MyType) repeatable on | QUERY | SCHEMA
+
+"My description"
+directive @myDirective(myDirectiveArg: MyType) repeatable on | QUERY | SCHEMA
