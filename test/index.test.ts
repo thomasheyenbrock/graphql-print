@@ -36,10 +36,10 @@ import {
 } from "graphql";
 import { join } from "path";
 import { describe, expect, it } from "vitest";
-import { print } from ".";
+import { print } from "../src";
 
 const KITCHEN_SINK = readFileSync(
-  join(__dirname, "..", "utils", "kitchenSink.gql"),
+  join(__dirname, "utils", "kitchenSink.gql"),
   "utf8"
 );
 
@@ -222,10 +222,7 @@ describe("kitchen sink", () => {
   });
 });
 
-const LANGUAGE = readFileSync(
-  join(__dirname, "..", "utils", "language.gql"),
-  "utf8"
-);
+const LANGUAGE = readFileSync(join(__dirname, "utils", "language.gql"), "utf8");
 
 describe("idempotency for parsing-printing", () => {
   it("is idempotent without comments", () => {
@@ -238,10 +235,7 @@ describe("idempotency for parsing-printing", () => {
   });
 });
 
-const COMMENTS = readFileSync(
-  join(__dirname, "..", "utils", "comments.gql"),
-  "utf8"
-);
+const COMMENTS = readFileSync(join(__dirname, "utils", "comments.gql"), "utf8");
 
 describe("preserving comments", () => {
   it("does not remove any comments when standard printing", () => {
