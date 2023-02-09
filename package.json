@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "benchmark": "node -r esbuild-register test/benchmark.ts",
-    "build": "tsup src/index.ts",
+    "build": "tsup src/index.ts --format esm,cjs --dts --minify --external graphql",
     "format": "prettier --write '**/*.{js,ts,json,md}'",
     "test": "vitest"
   },
@@ -18,6 +18,7 @@
     "esbuild-register": "^3.4.2",
     "prettier": "^2.8.4",
     "tsup": "^6.5.0",
+    "typescript": "^4.9.5",
     "vitest": "^0.28.4"
   }
 }
