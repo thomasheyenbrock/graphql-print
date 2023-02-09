@@ -3796,3 +3796,68 @@ describe("VariableDefinition", () => {
       `);
   });
 });
+
+describe("printing a list of nodes", () => {
+  const q1 = `
+    # block comment 1
+    query MyQuery {
+      myQueryField
+    }
+    # block comment 2
+    `;
+  const q2 = `
+    # block comment 3
+    mutation MyMutation {
+      myMutationField
+    }
+    # block comment 4
+  `;
+  const nodes = [parse(q1), parse(q2)];
+  it("prints without comments", () => {
+    expect(print(nodes)).toMatchInlineSnapshot(`
+      "query MyQuery{myQueryField}
+      mutation MyMutation{myMutationField}"
+    `);
+  });
+  it("prints with comments", () => {
+    expect(print(nodes, { preserveComments: true })).toMatchInlineSnapshot(`
+      "#block comment 1
+      query MyQuery{myQueryField}
+      #block comment 2
+      #block comment 3
+      mutation MyMutation{myMutationField}
+      #block comment 4"
+    `);
+  });
+  it("prints pretty without comments", () => {
+    expect(print(nodes, { pretty: true })).toMatchInlineSnapshot(`
+      "query MyQuery {
+        myQueryField
+      }
+
+      mutation MyMutation {
+        myMutationField
+      }
+      "
+    `);
+  });
+  it("prints pretty with comments", () => {
+    expect(print(nodes, { preserveComments: true, pretty: true }))
+      .toMatchInlineSnapshot(`
+      "# block comment 1
+      query MyQuery {
+        myQueryField
+      }
+
+      # block comment 2
+
+      # block comment 3
+      mutation MyMutation {
+        myMutationField
+      }
+
+      # block comment 4
+      "
+    `);
+  });
+});

@@ -68,9 +68,10 @@ type PrintOptions = {
   pretty?: boolean;
 };
 
-export function print(ast: ASTNode | ASTNode[], options: PrintOptions = {}) {
-  // TODO: actually handle printing lists
-  return printAST(ast as ASTNode, options);
+export function print(node: ASTNode | ASTNode[], options: PrintOptions = {}) {
+  return (Array.isArray(node) ? node : [node])
+    .map((node) => printAST(node, options))
+    .join("\n");
 }
 
 function printAST(
