@@ -1,15 +1,24 @@
 import { Event, Suite } from "benchmark";
 import { parse } from "graphql";
 import { execSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const KITCHEN_SINK = parse(
   readFileSync(join(__dirname, "utils", "kitchenSink.gql"), "utf8")
 );
 
+execSync("pnpm build");
+execSync("cp -r dist dist-new");
 execSync("cp src/index.ts src/index-new.ts");
 execSync("git stash");
+execSync("pnpm build");
+
+const sizeOld = statSync(join(__dirname, "../dist/index.js")).size;
+const sizeNew = statSync(join(__dirname, "../dist-new/index.js")).size;
+console.log("old x " + sizeOld.toLocaleString() + " bytes");
+console.log("new x " + sizeNew.toLocaleString() + " bytes");
+console.log((sizeNew < sizeOld ? "new" : "old") + " is smaller\n");
 
 const { print: printOld } = require(join(__dirname, "../src/index"));
 const { print: printNew } = require(join(__dirname, "../src/index-new"));
@@ -23,7 +32,7 @@ prettyWithoutComments
   })
   .on("complete", () => {
     console.log(
-      prettyWithoutComments.filter("fastest").map("name") + " is faster"
+      prettyWithoutComments.filter("fastest").map("name") + " is faster\n"
     );
   })
   .run();
@@ -37,7 +46,7 @@ prettyWithComments
   })
   .on("complete", () => {
     console.log(
-      prettyWithComments.filter("fastest").map("name") + " is faster"
+      prettyWithComments.filter("fastest").map("name") + " is faster\n"
     );
   })
   .run();
@@ -51,7 +60,7 @@ minifiedWithoutComments
   })
   .on("complete", () => {
     console.log(
-      minifiedWithoutComments.filter("fastest").map("name") + " is faster"
+      minifiedWithoutComments.filter("fastest").map("name") + " is faster\n"
     );
   })
   .run();
@@ -69,10 +78,11 @@ minifiedWithComments
   })
   .on("complete", () => {
     console.log(
-      minifiedWithComments.filter("fastest").map("name") + " is faster"
+      minifiedWithComments.filter("fastest").map("name") + " is faster\n"
     );
   })
   .run();
 
 execSync("git stash pop");
+execSync("rm -r dist-new");
 execSync("rm src/index-new.ts");
