@@ -65,7 +65,7 @@ type PrintOptions = {
   indentationStep?: string;
   maxLineLength?: number;
   preserveComments?: boolean;
-  pretty?: boolean;
+  minified?: boolean;
 };
 
 export function print(node: ASTNode | ASTNode[], options: PrintOptions = {}) {
@@ -80,10 +80,10 @@ function printAST(
     indentationStep = "  ",
     maxLineLength = 80,
     preserveComments = false,
-    pretty = false,
+    minified = false,
   }: PrintOptions
 ): string {
-  const SPACE: Text = { type: "text", value: pretty ? " " : "" };
+  const SPACE: Text = { type: "text", value: minified ? "" : " " };
 
   function getComments(token: Maybe<Token>) {
     if (!preserveComments || !token) return [];
@@ -119,7 +119,7 @@ function printAST(
     const closingBracket = getComments(endToken);
 
     const shouldPrintMultiLine =
-      pretty &&
+      !minified &&
       (forceMultiLine || hasHardLine(list) || closingBracket.length > 0);
 
     return [
@@ -281,7 +281,7 @@ function printAST(
         ...(hasComments
           ? [
               ...(firstNamedTypeComments.length === 0 ? [hardLine()] : []),
-              text(pretty ? delimiterKind : ""),
+              text(minified ? "" : delimiterKind),
               SPACE,
             ]
           : [softLine(wrapInitializer, [text(delimiterKind), SPACE])]),
@@ -334,7 +334,7 @@ function printAST(
     return description
       ? [
           ...description,
-          ...(pretty && (!preserveComments || comments.length === 0)
+          ...(!minified && (!preserveComments || comments.length === 0)
             ? [hardLine()]
             : []),
         ]
@@ -522,7 +522,7 @@ function printAST(
                 hardLine(),
                 ...locations.flatMap(({ comments, location }, index) => [
                   ...comments,
-                  text(!pretty && index === 0 ? "" : "|"),
+                  text(minified && index === 0 ? "" : "|"),
                   SPACE,
                   ...location,
                 ]),
@@ -546,9 +546,11 @@ function printAST(
               while (definition[0].type === "hard_line") definition.shift();
               return definition;
             }),
-            [hardLine(), ...(pretty ? [hardLine()] : [])]
+            [hardLine(), ...(minified ? [] : [hardLine()])]
           ),
-          ...(pretty && comments.length > 0 ? [hardLine(), hardLine()] : []),
+          ...(minified || comments.length === 0
+            ? []
+            : [hardLine(), hardLine()]),
           ...comments,
         ];
       },
@@ -1651,7 +1653,7 @@ function printAST(
 
   function printCurrentLine() {
     const printedLine = indentation + printLine(currentLine, false);
-    if (!pretty || printedLine.length <= maxLineLength) {
+    if (minified || printedLine.length <= maxLineLength) {
       printed += printedLine;
     } else {
       printed += indentation;
@@ -1671,8 +1673,7 @@ function printAST(
     }
   }
   printCurrentLine();
-  // TODO: also return whitespace at the end of lines
-  return printed.replace(/^\n*/, "").replace(/\n*$/, pretty ? "\n" : "");
+  return printed.replace(/^\n*/, "").replace(/\n*$/, minified ? "" : "\n");
 }
 
 function filterComments(tokens: PrintToken[]) {
