@@ -303,7 +303,7 @@ describe("Argument", () => {
 describe("BooleanValue", () => {
   const q = `
     {
-      myField(myArg: 
+      myField(myArg:
         # block comment
         true # inline comment
       )
@@ -484,7 +484,7 @@ describe("DirectiveDefinition", () => {
         )
         #block comment 7
         #inline comment 7
-        repeatable 
+        repeatable
         #block comment 8
         #inline comment 8
         on
@@ -529,7 +529,7 @@ describe("DirectiveDefinition", () => {
           )
           # block comment 7
           # inline comment 7
-          repeatable 
+          repeatable
           # block comment 8
           # inline comment 8
           on
@@ -549,7 +549,7 @@ describe("DirectiveDefinition", () => {
   });
   describe("inline", () => {
     const q = `
-      directive @myDirective 
+      directive @myDirective
       # block comment
       on # inline comment
       QUERY | MUTATION
@@ -562,7 +562,7 @@ describe("DirectiveDefinition", () => {
     });
     it("prints with comments", () => {
       expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
-        "directive@myDirective 
+        "directive@myDirective
         #block comment
         #inline comment
         on QUERY|MUTATION"
@@ -577,7 +577,7 @@ describe("DirectiveDefinition", () => {
     it("prints pretty with comments", () => {
       expect(print(node, { preserveComments: true, pretty: true }))
         .toMatchInlineSnapshot(`
-          "directive @myDirective 
+          "directive @myDirective
           # block comment
           # inline comment
           on QUERY | MUTATION
@@ -607,7 +607,7 @@ describe("DirectiveDefinition", () => {
     });
     it("prints with comments", () => {
       expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
-        "directive@myDirective 
+        "directive@myDirective
         #block comment
         #inline comment
         on QUERY|MUTATION|SUBSCRIPTION|FIELD|FRAGMENT_DEFINITION|FRAGMENT_SPREAD|INLINE_FRAGMENT|VARIABLE_DEFINITION"
@@ -630,7 +630,7 @@ describe("DirectiveDefinition", () => {
     it("prints pretty with comments", () => {
       expect(print(node, { preserveComments: true, pretty: true }))
         .toMatchInlineSnapshot(`
-          "directive @myDirective 
+          "directive @myDirective
           # block comment
           # inline comment
           on
@@ -758,13 +758,13 @@ describe("EnumTypeDefinition", () => {
         # inline comment 2
         # block comment 3
         # inline comment 3
-        enum MyEnumType 
+        enum MyEnumType
         # block comment 4
         # inline comment 4
-        @myDirective 
+        @myDirective
         # block comment 5
         # inline comment 5
-        @myOtherDirective 
+        @myOtherDirective
         # block comment 6
         # inline comment 6
         {
@@ -844,13 +844,13 @@ describe("EnumTypeExtension", () => {
         # inline comment 2
         # block comment 3
         # inline comment 3
-        extend enum MyEnumType 
+        extend enum MyEnumType
         # block comment 4
         # inline comment 4
-        @myDirective 
+        @myDirective
         # block comment 5
         # inline comment 5
-        @myOtherDirective 
+        @myOtherDirective
         # block comment 6
         # inline comment 6
         {
@@ -867,7 +867,7 @@ describe("EnumTypeExtension", () => {
 describe("EnumValue", () => {
   const q = `
     {
-      myField(myArg: 
+      myField(myArg:
         # block comment
         MY_ENUM_VALUE # inline comment
       )
@@ -954,10 +954,10 @@ describe("EnumValueDefinitionNode", () => {
         \\"my description\\"
         # block comment 2
         # inline comment 2
-        MY_ENUM_VALUE 
+        MY_ENUM_VALUE
         # block comment 3
         # inline comment 3
-        @myDirective 
+        @myDirective
         # block comment 4
         # inline comment 4
         @myOtherDirective
@@ -1044,10 +1044,10 @@ describe("Field", () => {
             myArg: 42
           # block comment 5
           # inline comment 5
-          ) 
+          )
           # block comment 6
           # inline comment 6
-          @myDirective 
+          @myDirective
           # block comment 7
           # inline comment 7
           @myOtherDirective {
@@ -1165,13 +1165,13 @@ describe("FieldDefinition", () => {
           myArg: MyInputType = 42
         # block comment 4
         # inline comment 4
-        ): 
+        ):
         # block comment 6
         # inline comment 6
-        MyOutputType 
+        MyOutputType
         # block comment 7
         # inline comment 7
-        @myDirective 
+        @myDirective
         # block comment 8
         # inline comment 8
         @myOtherDirective
@@ -1183,7 +1183,7 @@ describe("FieldDefinition", () => {
 describe("FloatValue", () => {
   const q = `
     {
-      myField(myArg: 
+      myField(myArg:
         # block comment
         42.43e44 # inline comment
       )
@@ -1252,7 +1252,7 @@ describe("FragmentDefinition", () => {
       #inline comment 2
       #block comment 3
       #inline comment 3
-      fragment MyFragmentName on 
+      fragment MyFragmentName on
       #block comment 4
       #inline comment 4
       MyType
@@ -1281,13 +1281,13 @@ describe("FragmentDefinition", () => {
         # inline comment 2
         # block comment 3
         # inline comment 3
-        fragment MyFragmentName on 
+        fragment MyFragmentName on
         # block comment 4
         # inline comment 4
-        MyType 
+        MyType
         # block comment 5
         # inline comment 5
-        @myDirective 
+        @myDirective
         # block comment 6
         # inline comment 6
         @myOtherDirective {
@@ -1346,10 +1346,10 @@ describe("FragmentSpread", () => {
         # inline comment 1
         # block comment 2
         # inline comment 2
-        ...MyFragmentName 
+        ...MyFragmentName
         # block comment 3
         # inline comment 3
-        @myDirective 
+        @myDirective
         # block comment 4
         # inline comment 4
         @myOtherDirective
@@ -1389,7 +1389,7 @@ describe("InlineFragment", () => {
       #inline comment 1
       #block comment 2
       #inline comment 2
-      ...on 
+      ...on
       #block comment 3
       #inline comment 3
       MyType
@@ -1416,13 +1416,13 @@ describe("InlineFragment", () => {
         # inline comment 1
         # block comment 2
         # inline comment 2
-        ...on 
+        ...on
         # block comment 3
         # inline comment 3
-        MyType 
+        MyType
         # block comment 4
         # inline comment 4
-        @myDirective 
+        @myDirective
         # block comment 5
         # inline comment 5
         @myOtherDirective {
@@ -1500,13 +1500,13 @@ describe("InputObjectTypeDefinition", () => {
         # inline comment 2
         # block comment 3
         # inline comment 3
-        input MyInputObjectType 
+        input MyInputObjectType
         # block comment 4
         # inline comment 4
-        @myDirective 
+        @myDirective
         # block comment 5
         # inline comment 5
-        @myOtherDirective 
+        @myOtherDirective
         # block comment 6
         # inline comment 6
         {
@@ -1583,13 +1583,13 @@ describe("InputObjectTypeExtension", () => {
         # inline comment 2
         # block comment 3
         # inline comment 3
-        extend input MyInputObjectType 
+        extend input MyInputObjectType
         # block comment 4
         # inline comment 4
-        @myDirective 
+        @myDirective
         # block comment 5
         # inline comment 5
-        @myOtherDirective 
+        @myOtherDirective
         # block comment 6
         # inline comment 6
         {
@@ -1675,7 +1675,7 @@ describe("InputValueDefinition", () => {
         # inline comment 2
         # block comment 3
         # inline comment 3
-        myInputField: 
+        myInputField:
         # block comment 4
         # inline comment 4
         MyInputType
@@ -1683,10 +1683,10 @@ describe("InputValueDefinition", () => {
         # inline comment 5
         # block comment 6
         # inline comment 6
-        = 42 
+        = 42
         # block comment 7
         # inline comment 7
-        @myDirective 
+        @myDirective
         # block comment 8
         # inline comment 8
         @myOtherDirective
@@ -1801,13 +1801,13 @@ describe("InterfaceTypeDefinition", () => {
           # inline comment 7
           # block comment 8
           # inline comment 8
-          & MyInterfaceType2 
+          & MyInterfaceType2
           # block comment 9
           # inline comment 9
-          @myDirective 
+          @myDirective
           # block comment 10
           # inline comment 10
-          @myOtherDirective 
+          @myOtherDirective
           # block comment 11
           # inline comment 11
           {
@@ -1943,13 +1943,13 @@ describe("InterfaceTypeExtension", () => {
           # inline comment 7
           # block comment 8
           # inline comment 8
-          & MyInterfaceType2 
+          & MyInterfaceType2
           # block comment 9
           # inline comment 9
-          @myDirective 
+          @myDirective
           # block comment 10
           # inline comment 10
-          @myOtherDirective 
+          @myOtherDirective
           # block comment 11
           # inline comment 11
           {
@@ -1985,7 +1985,7 @@ describe("InterfaceTypeExtension", () => {
 describe("IntValue", () => {
   const q = `
     {
-      myField(myArg: 
+      myField(myArg:
         # block comment
         42 # inline comment
       )
@@ -2025,7 +2025,7 @@ describe("IntValue", () => {
 describe("ListType", () => {
   const q = `
     type MyType {
-      myField: 
+      myField:
       # block comment 1
       [ # inline comment 1
       # block comment 2
@@ -2074,7 +2074,7 @@ describe("ListType", () => {
 describe("ListValue", () => {
   const q = `
     {
-      myField(myArg: 
+      myField(myArg:
         # block comment open
         [ # inline comment open
           42
@@ -2160,7 +2160,7 @@ describe("NameNode", () => {
 describe("NamedTypeNode", () => {
   const q = `
     type MyType {
-      myField: 
+      myField:
       # block comment
       MyType # inline comment
     }
@@ -2240,7 +2240,7 @@ describe("NonNullType", () => {
 describe("NullValue", () => {
   const q = `
     {
-      myField(myArg: 
+      myField(myArg:
         # block comment
         null # inline comment
       )
@@ -2324,7 +2324,7 @@ describe("ObjectField", () => {
         # inline comment 1
         # block comment 2
         # inline comment 2
-        myFieldName: 
+        myFieldName:
         # block comment 3
         # inline comment 3
         42
@@ -2439,13 +2439,13 @@ describe("ObjectTypeDefinition", () => {
           # inline comment 7
           # block comment 8
           # inline comment 8
-          & MyInterfaceType2 
+          & MyInterfaceType2
           # block comment 9
           # inline comment 9
-          @myDirective 
+          @myDirective
           # block comment 10
           # inline comment 10
-          @myOtherDirective 
+          @myOtherDirective
           # block comment 11
           # inline comment 11
           {
@@ -2581,13 +2581,13 @@ describe("ObjectTypeExtension", () => {
           # inline comment 7
           # block comment 8
           # inline comment 8
-          & MyInterfaceType2 
+          & MyInterfaceType2
           # block comment 9
           # inline comment 9
-          @myDirective 
+          @myDirective
           # block comment 10
           # inline comment 10
-          @myOtherDirective 
+          @myOtherDirective
           # block comment 11
           # inline comment 11
           {
@@ -2624,7 +2624,7 @@ describe("ObjectValue", () => {
   describe("inline fields", () => {
     const q = `
       {
-        myField(myArg: 
+        myField(myArg:
           # block comment open
           { # inline comment open
             myFieldName1: 42
@@ -2857,10 +2857,10 @@ describe("OperationDefinition", () => {
             $myVariable: Int = 42
           # block comment 4
           # inline comment 4
-          ) 
+          )
           # block comment 5
           # inline comment 5
-          @myDirective 
+          @myDirective
           # block comment 6
           # inline comment 6
           @myOtherDirective {
@@ -2938,7 +2938,7 @@ describe("OperationTypeDefinition", () => {
         # inline comment 1
         # block comment 2
         # inline comment 2
-        query: 
+        query:
         # block comment 3
         # inline comment 3
         MyOutputType
@@ -3001,10 +3001,10 @@ describe("ScalarTypeDefinition", () => {
         # inline comment 2
         # block comment 3
         # inline comment 3
-        scalar MyScalarType 
+        scalar MyScalarType
         # block comment 4
         # inline comment 4
-        @myDirective 
+        @myDirective
         # block comment 5
         # inline comment 5
         @myOtherDirective
@@ -3064,10 +3064,10 @@ describe("ScalarTypeExtension", () => {
         # inline comment 2
         # block comment 3
         # inline comment 3
-        extend scalar MyScalarType 
+        extend scalar MyScalarType
         # block comment 4
         # inline comment 4
-        @myDirective 
+        @myDirective
         # block comment 5
         # inline comment 5
         @myOtherDirective
@@ -3137,13 +3137,13 @@ describe("SchemaDefinition", () => {
         \\"my description\\"
         # block comment 2
         # inline comment 2
-        schema 
+        schema
         # block comment 3
         # inline comment 3
-        @myDirective 
+        @myDirective
         # block comment 4
         # inline comment 4
-        @myOtherDirective 
+        @myOtherDirective
         # block comment 5
         # inline comment 5
         {
@@ -3214,13 +3214,13 @@ describe("SchemaExtension", () => {
         # inline comment 1
         # block comment 2
         # inline comment 2
-        extend schema 
+        extend schema
         # block comment 3
         # inline comment 3
-        @myDirective 
+        @myDirective
         # block comment 4
         # inline comment 4
-        @myOtherDirective 
+        @myOtherDirective
         # block comment 5
         # inline comment 5
         {
@@ -3286,7 +3286,7 @@ describe("StringValue", () => {
   describe("regular string values", () => {
     const q = `
       {
-        myField(myArg: 
+        myField(myArg:
           # block comment
           "my string" # inline comment
         )
@@ -3325,7 +3325,7 @@ describe("StringValue", () => {
   describe("block string values without line breaks", () => {
     const q = `
       {
-        myField(myArg: 
+        myField(myArg:
           # block comment
           """my \\""" string""" # inline comment
         )
@@ -3366,7 +3366,7 @@ describe("StringValue", () => {
   describe("block string values with line breaks", () => {
     const q = `
       {
-        myField(myArg: 
+        myField(myArg:
           # block comment
           """my
           \\"""
@@ -3502,10 +3502,10 @@ describe("UnionTypeDefinition", () => {
           # inline comment 2
           # block comment 3
           # inline comment 3
-          union MyUnionType 
+          union MyUnionType
           # block comment 4
           # inline comment 4
-          @myDirective 
+          @myDirective
           # block comment 5
           # inline comment 5
           @myOtherDirective
@@ -3622,10 +3622,10 @@ describe("UnionTypeExtension", () => {
           # inline comment 2
           # block comment 3
           # inline comment 3
-          extend union MyUnionType 
+          extend union MyUnionType
           # block comment 4
           # inline comment 4
-          @myDirective 
+          @myDirective
           # block comment 5
           # inline comment 5
           @myOtherDirective
@@ -3670,7 +3670,7 @@ describe("UnionTypeExtension", () => {
 describe("Variable", () => {
   const q = `
     {
-      myField(myArg: 
+      myField(myArg:
         # block comment 1
         $ # inline comment 1
         # block comment 2
@@ -3777,7 +3777,7 @@ describe("VariableDefinition", () => {
         # inline comment 1
         # block comment 2
         # inline comment 2
-        $myVariable: 
+        $myVariable:
         # block comment 3
         # inline comment 3
         MyType
@@ -3785,10 +3785,10 @@ describe("VariableDefinition", () => {
         # inline comment 4
         # block comment 5
         # inline comment 5
-        = 42 
+        = 42
         # block comment 6
         # inline comment 6
-        @myDirective 
+        @myDirective
         # block comment 7
         # inline comment 7
         @myOtherDirective

@@ -1636,6 +1636,7 @@ function printAST(
           break;
         case "soft_line":
           if (breakLines) {
+            printed = printed.trimEnd();
             handleIndentation(item.indentation);
             printed += "\n" + indentation;
             for (const prefix of item.prefix) printed += prefix.value;
@@ -1645,7 +1646,7 @@ function printAST(
           break;
       }
     }
-    return printed;
+    return printed.trimEnd();
   }
 
   function printCurrentLine() {
