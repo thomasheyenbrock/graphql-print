@@ -1585,48 +1585,6 @@ function printAST(
     },
   });
 
-  let printed = "";
-  let currentLine: (Text | SoftLine)[] = [];
-  let indentation = "";
-
-  function handleIndentation(i?: Indentation) {
-    if (i === "+") indentation += indentationStep;
-    if (i === "-") indentation = indentation.slice(indentationStep.length);
-  }
-
-  function printLine(list: (Text | SoftLine)[], breakLines: boolean) {
-    let printed = "";
-    for (let i = 0; i < list.length; i++) {
-      const item = list[i];
-      switch (item.type) {
-        case "text":
-          printed += item.value;
-          break;
-        case "soft_line":
-          if (breakLines) {
-            handleIndentation(item.indentation);
-            printed += "\n" + indentation;
-            for (const prefix of item.prefix) printed += prefix.value;
-          } else {
-            for (const alt of item.alt) printed += alt.value;
-          }
-          break;
-      }
-    }
-    return printed;
-  }
-
-  function printCurrentLine() {
-    const printedLine = printLine(currentLine, false);
-    if (!pretty || printedLine.length <= maxLineLength) {
-      printed += printedLine;
-    } else {
-      printed += printLine(currentLine, true);
-    }
-
-    currentLine = [];
-  }
-
   const resolveComments = list.reduce<(Text | SoftLine | HardLine)[]>(
     (acc, item) => {
       switch (item.type) {
@@ -1659,11 +1617,54 @@ function printAST(
     []
   );
 
+  let printed = "";
+  let currentLine: (Text | SoftLine)[] = [];
+  let indentation = "";
+
+  function handleIndentation(i?: Indentation) {
+    if (i === "+") indentation += indentationStep;
+    if (i === "-") indentation = indentation.slice(indentationStep.length);
+  }
+
+  function printLine(list: (Text | SoftLine)[], breakLines: boolean) {
+    let printed = "";
+    for (let i = 0; i < list.length; i++) {
+      const item = list[i];
+      switch (item.type) {
+        case "text":
+          printed += item.value;
+          break;
+        case "soft_line":
+          if (breakLines) {
+            handleIndentation(item.indentation);
+            printed += "\n" + indentation;
+            for (const prefix of item.prefix) printed += prefix.value;
+          } else {
+            for (const alt of item.alt) printed += alt.value;
+          }
+          break;
+      }
+    }
+    return printed;
+  }
+
+  function printCurrentLine() {
+    const printedLine = indentation + printLine(currentLine, false);
+    if (!pretty || printedLine.length <= maxLineLength) {
+      printed += printedLine;
+    } else {
+      printed += indentation;
+      printed += printLine(currentLine, true);
+    }
+
+    currentLine = [];
+  }
+
   for (const item of resolveComments) {
-    if (typeof item === "object" && item.type === "hard_line") {
+    if (item.type === "hard_line") {
       printCurrentLine();
       handleIndentation(item.indentation);
-      printed += "\n" + indentation;
+      printed += "\n";
     } else {
       currentLine.push(item);
     }

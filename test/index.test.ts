@@ -3861,3 +3861,36 @@ describe("printing a list of nodes", () => {
     `);
   });
 });
+
+describe("printing with a maximum line length", () => {
+  const q = `
+    query MyQuery($myVariable1: Int, $myVariable2: String) {
+      myField(myArg1: 42, myArg2: "my loooooooooong string")
+    }
+  `;
+  const node = parse(q);
+  it("should not break with a value of 56", () => {
+    expect(print(node, { pretty: true, maxLineLength: 56 }))
+      .toMatchInlineSnapshot(`
+      "query MyQuery($myVariable1: Int, $myVariable2: String) {
+        myField(myArg1: 42, myArg2: \\"my loooooooooong string\\")
+      }
+      "
+    `);
+  });
+  it("should break with a value of 55", () => {
+    expect(print(node, { pretty: true, maxLineLength: 55 }))
+      .toMatchInlineSnapshot(`
+      "query MyQuery(
+        $myVariable1: Int
+        $myVariable2: String
+      ) {
+        myField(
+          myArg1: 42
+          myArg2: \\"my loooooooooong string\\"
+        )
+      }
+      "
+    `);
+  });
+});
