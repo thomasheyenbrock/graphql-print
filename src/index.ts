@@ -38,16 +38,11 @@ function text(value: string): Text {
 }
 
 function softLine(
-  alt: Text | Text[],
-  prefix: Text | Text[] = [],
+  alt: Text[],
+  prefix: Text[] = [],
   indentation?: Indentation
 ): SoftLine {
-  return {
-    type: "soft_line",
-    alt: Array.isArray(alt) ? alt : [alt],
-    prefix: Array.isArray(prefix) ? prefix : [prefix],
-    indentation,
-  };
+  return { type: "soft_line", alt, prefix, indentation };
 }
 
 function hardLine(indentation?: Indentation): HardLine {
@@ -139,7 +134,7 @@ function printAST(
       shouldPrintMultiLine
         ? hardLine("-")
         : softLine(
-            closingBracket.length > 0 ? text("\n") : spacer,
+            closingBracket.length > 0 ? [text("\n")] : spacer,
             undefined,
             "-"
           ),
@@ -265,10 +260,9 @@ function printAST(
         if (hasComments) itemList.push(text(delimiterKind + " "));
         else
           itemList.push(
-            softLine(
-              i === 0 ? [] : text(" " + delimiterKind + " "),
-              text(delimiterKind + " ")
-            )
+            softLine(i === 0 ? [] : [text(" " + delimiterKind + " ")], [
+              text(delimiterKind + " "),
+            ])
           );
       }
 
