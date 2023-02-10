@@ -653,6 +653,52 @@ describe("DirectiveDefinition", () => {
         `);
     });
   });
+  describe("locations with comments", () => {
+    const q = `
+      directive @myDirective on QUERY
+      # block comment 9
+      | # inline comment 9
+      # block comment 10
+      MUTATION # inline comment 10
+      | SUBSCRIPTION
+    `;
+    const node = parse(q).definitions[0] as UnionTypeExtensionNode;
+    it("prints pretty without comments", () => {
+      expect(print(node)).toMatchInlineSnapshot(`
+        "directive @myDirective on QUERY | MUTATION | SUBSCRIPTION
+        "
+      `);
+    });
+    it("prints pretty with comments", () => {
+      expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
+        "directive @myDirective on
+        | QUERY
+        # block comment 9
+        # inline comment 9
+        # block comment 10
+        # inline comment 10
+        | MUTATION
+        | SUBSCRIPTION
+        "
+      `);
+    });
+    it("prints minified without comments", () => {
+      expect(print(node, { minified: true })).toMatchInlineSnapshot(
+        '"directive@myDirective on QUERY|MUTATION|SUBSCRIPTION"'
+      );
+    });
+    it("prints minified with comments", () => {
+      expect(print(node, { minified: true, preserveComments: true }))
+        .toMatchInlineSnapshot(`
+          "directive@myDirective on QUERY
+          #block comment 9
+          #inline comment 9
+          #block comment 10
+          #inline comment 10
+          |MUTATION|SUBSCRIPTION"
+        `);
+    });
+  });
 });
 
 describe("Document", () => {
@@ -1849,6 +1895,52 @@ describe("InterfaceTypeDefinition", () => {
       );
     });
   });
+  describe("interfaces with comments", () => {
+    const q = `
+      interface MyInterfaceType implements MyType1
+      # block comment 9
+      & # inline comment 9
+      # block comment 10
+      MyType2 # inline comment 10
+      & MyType3
+    `;
+    const node = parse(q).definitions[0] as UnionTypeExtensionNode;
+    it("prints pretty without comments", () => {
+      expect(print(node)).toMatchInlineSnapshot(`
+        "interface MyInterfaceType implements MyType1 & MyType2 & MyType3
+        "
+      `);
+    });
+    it("prints pretty with comments", () => {
+      expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
+        "interface MyInterfaceType implements
+        & MyType1
+        # block comment 9
+        # inline comment 9
+        # block comment 10
+        # inline comment 10
+        & MyType2
+        & MyType3
+        "
+      `);
+    });
+    it("prints minified without comments", () => {
+      expect(print(node, { minified: true })).toMatchInlineSnapshot(
+        '"interface MyInterfaceType implements MyType1&MyType2&MyType3"'
+      );
+    });
+    it("prints minified with comments", () => {
+      expect(print(node, { minified: true, preserveComments: true }))
+        .toMatchInlineSnapshot(`
+          "interface MyInterfaceType implements MyType1
+          #block comment 9
+          #inline comment 9
+          #block comment 10
+          #inline comment 10
+          &MyType2&MyType3"
+        `);
+    });
+  });
 });
 
 describe("InterfaceTypeExtension", () => {
@@ -1991,6 +2083,52 @@ describe("InterfaceTypeExtension", () => {
       );
     });
   });
+  describe("interfaces with comments", () => {
+    const q = `
+      extend interface MyInterfaceType implements MyType1
+      # block comment 9
+      & # inline comment 9
+      # block comment 10
+      MyType2 # inline comment 10
+      & MyType3
+    `;
+    const node = parse(q).definitions[0] as UnionTypeExtensionNode;
+    it("prints pretty without comments", () => {
+      expect(print(node)).toMatchInlineSnapshot(`
+        "extend interface MyInterfaceType implements MyType1 & MyType2 & MyType3
+        "
+      `);
+    });
+    it("prints pretty with comments", () => {
+      expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
+        "extend interface MyInterfaceType implements
+        & MyType1
+        # block comment 9
+        # inline comment 9
+        # block comment 10
+        # inline comment 10
+        & MyType2
+        & MyType3
+        "
+      `);
+    });
+    it("prints minified without comments", () => {
+      expect(print(node, { minified: true })).toMatchInlineSnapshot(
+        '"extend interface MyInterfaceType implements MyType1&MyType2&MyType3"'
+      );
+    });
+    it("prints minified with comments", () => {
+      expect(print(node, { minified: true, preserveComments: true }))
+        .toMatchInlineSnapshot(`
+          "extend interface MyInterfaceType implements MyType1
+          #block comment 9
+          #inline comment 9
+          #block comment 10
+          #inline comment 10
+          &MyType2&MyType3"
+        `);
+    });
+  });
 });
 
 describe("IntValue", () => {
@@ -2083,54 +2221,105 @@ describe("ListType", () => {
 });
 
 describe("ListValue", () => {
-  const q = `
-    {
-      myField(myArg:
-        # block comment open
-        [ # inline comment open
+  describe("empty list", () => {
+    const q = `
+      {
+        myField(myArg:
+          # block comment open
+          [ # inline comment open
+          # block comment close
+          ] # inline comment close
+        )
+      }
+    `;
+    const node = (
+      (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
+        .selections[0] as FieldNode
+    ).arguments![0].value as ListValueNode;
+    it("prints pretty without comments", () => {
+      expect(print(node)).toMatchInlineSnapshot(`
+        "[]
+        "
+      `);
+    });
+    it("prints pretty with comments", () => {
+      expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
+        "# block comment open
+        # inline comment open
+        [
+        # block comment close
+        # inline comment close
+        ]
+        "
+      `);
+    });
+    it("prints minified without comments", () => {
+      expect(print(node, { minified: true })).toMatchInlineSnapshot('"[]"');
+    });
+    it("prints minified with comments", () => {
+      expect(print(node, { minified: true, preserveComments: true }))
+        .toMatchInlineSnapshot(`
+          "#block comment open
+          #inline comment open
+          [
+          #block comment close
+          #inline comment close
+          ]"
+        `);
+    });
+  });
+  describe("non-empty list", () => {
+    const q = `
+      {
+        myField(myArg:
+          # block comment open
+          [ # inline comment open
+            42
+            43
+          # block comment close
+          ] # inline comment close
+        )
+      }
+    `;
+    const node = (
+      (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
+        .selections[0] as FieldNode
+    ).arguments![0].value as ListValueNode;
+    it("prints pretty without comments", () => {
+      expect(print(node)).toMatchInlineSnapshot(`
+        "[42, 43]
+        "
+      `);
+    });
+    it("prints pretty with comments", () => {
+      expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
+        "# block comment open
+        # inline comment open
+        [
           42
           43
         # block comment close
-        ] # inline comment close
-      )
-    }
-  `;
-  const node = (
-    (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
-      .selections[0] as FieldNode
-  ).arguments![0].value as ListValueNode;
-  it("prints pretty without comments", () => {
-    expect(print(node)).toMatchInlineSnapshot(`
-      "[42, 43]
-      "
-    `);
-  });
-  it("prints pretty with comments", () => {
-    expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
-      "# block comment open
-      # inline comment open
-      [
-        42
-        43
-      # block comment close
-      # inline comment close
-      ]
-      "
-    `);
-  });
-  it("prints minified without comments", () => {
-    expect(print(node, { minified: true })).toMatchInlineSnapshot('"[42,43]"');
-  });
-  it("prints minified with comments", () => {
-    expect(print(node, { minified: true, preserveComments: true }))
-      .toMatchInlineSnapshot(`
-        "#block comment open
-        #inline comment open
-        [42,43
-        #block comment close
-        #inline comment close
-        ]"
+        # inline comment close
+        ]
+        "
       `);
+    });
+    it("prints minified without comments", () => {
+      expect(print(node, { minified: true })).toMatchInlineSnapshot(
+        '"[42,43]"'
+      );
+    });
+    it("prints minified with comments", () => {
+      expect(print(node, { minified: true, preserveComments: true }))
+        .toMatchInlineSnapshot(`
+          "#block comment open
+          #inline comment open
+          [42,43
+          #block comment close
+          #inline comment close
+          ]"
+        `);
+    });
   });
 });
 
@@ -2488,6 +2677,52 @@ describe("ObjectTypeDefinition", () => {
       );
     });
   });
+  describe("interfaces with comments", () => {
+    const q = `
+      type MyObjectType implements MyType1
+      # block comment 9
+      & # inline comment 9
+      # block comment 10
+      MyType2 # inline comment 10
+      & MyType3
+    `;
+    const node = parse(q).definitions[0] as UnionTypeExtensionNode;
+    it("prints pretty without comments", () => {
+      expect(print(node)).toMatchInlineSnapshot(`
+        "type MyObjectType implements MyType1 & MyType2 & MyType3
+        "
+      `);
+    });
+    it("prints pretty with comments", () => {
+      expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
+        "type MyObjectType implements
+        & MyType1
+        # block comment 9
+        # inline comment 9
+        # block comment 10
+        # inline comment 10
+        & MyType2
+        & MyType3
+        "
+      `);
+    });
+    it("prints minified without comments", () => {
+      expect(print(node, { minified: true })).toMatchInlineSnapshot(
+        '"type MyObjectType implements MyType1&MyType2&MyType3"'
+      );
+    });
+    it("prints minified with comments", () => {
+      expect(print(node, { minified: true, preserveComments: true }))
+        .toMatchInlineSnapshot(`
+          "type MyObjectType implements MyType1
+          #block comment 9
+          #inline comment 9
+          #block comment 10
+          #inline comment 10
+          &MyType2&MyType3"
+        `);
+    });
+  });
 });
 
 describe("ObjectTypeExtension", () => {
@@ -2630,9 +2865,102 @@ describe("ObjectTypeExtension", () => {
       );
     });
   });
+  describe("interfaces with comments", () => {
+    const q = `
+      extend type MyObjectType implements MyType1
+      # block comment 9
+      & # inline comment 9
+      # block comment 10
+      MyType2 # inline comment 10
+      & MyType3
+    `;
+    const node = parse(q).definitions[0] as UnionTypeExtensionNode;
+    it("prints pretty without comments", () => {
+      expect(print(node)).toMatchInlineSnapshot(`
+        "extend type MyObjectType implements MyType1 & MyType2 & MyType3
+        "
+      `);
+    });
+    it("prints pretty with comments", () => {
+      expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
+        "extend type MyObjectType implements
+        & MyType1
+        # block comment 9
+        # inline comment 9
+        # block comment 10
+        # inline comment 10
+        & MyType2
+        & MyType3
+        "
+      `);
+    });
+    it("prints minified without comments", () => {
+      expect(print(node, { minified: true })).toMatchInlineSnapshot(
+        '"extend type MyObjectType implements MyType1&MyType2&MyType3"'
+      );
+    });
+    it("prints minified with comments", () => {
+      expect(print(node, { minified: true, preserveComments: true }))
+        .toMatchInlineSnapshot(`
+          "extend type MyObjectType implements MyType1
+          #block comment 9
+          #inline comment 9
+          #block comment 10
+          #inline comment 10
+          &MyType2&MyType3"
+        `);
+    });
+  });
 });
 
 describe("ObjectValue", () => {
+  describe("empty fields", () => {
+    const q = `
+      {
+        myField(myArg:
+          # block comment open
+          { # inline comment open
+          # block comment close
+          } # inline comment close
+        )
+      }
+    `;
+    const node = (
+      (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
+        .selections[0] as FieldNode
+    ).arguments![0].value as ObjectValueNode;
+    it("prints pretty without comments", () => {
+      expect(print(node)).toMatchInlineSnapshot(`
+        "{}
+        "
+      `);
+    });
+    it("prints pretty with comments", () => {
+      expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
+        "# block comment open
+        # inline comment open
+        {
+        # block comment close
+        # inline comment close
+        }
+        "
+      `);
+    });
+    it("prints minified without comments", () => {
+      expect(print(node, { minified: true })).toMatchInlineSnapshot('"{}"');
+    });
+    it("prints minified with comments", () => {
+      expect(print(node, { minified: true, preserveComments: true }))
+        .toMatchInlineSnapshot(`
+          "#block comment open
+          #inline comment open
+          {
+          #block comment close
+          #inline comment close
+          }"
+        `);
+    });
+  });
   describe("inline fields", () => {
     const q = `
       {
@@ -3563,6 +3891,52 @@ describe("UnionTypeDefinition", () => {
       );
     });
   });
+  describe("types with comments", () => {
+    const q = `
+      union MyUnionType = MyType1
+      # block comment 9
+      | # inline comment 9
+      # block comment 10
+      MyType2 # inline comment 10
+      | MyType3
+    `;
+    const node = parse(q).definitions[0] as UnionTypeExtensionNode;
+    it("prints pretty without comments", () => {
+      expect(print(node)).toMatchInlineSnapshot(`
+        "union MyUnionType = MyType1 | MyType2 | MyType3
+        "
+      `);
+    });
+    it("prints pretty with comments", () => {
+      expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
+        "union MyUnionType =
+        | MyType1
+        # block comment 9
+        # inline comment 9
+        # block comment 10
+        # inline comment 10
+        | MyType2
+        | MyType3
+        "
+      `);
+    });
+    it("prints minified without comments", () => {
+      expect(print(node, { minified: true })).toMatchInlineSnapshot(
+        '"union MyUnionType=MyType1|MyType2|MyType3"'
+      );
+    });
+    it("prints minified with comments", () => {
+      expect(print(node, { minified: true, preserveComments: true }))
+        .toMatchInlineSnapshot(`
+          "union MyUnionType=MyType1
+          #block comment 9
+          #inline comment 9
+          #block comment 10
+          #inline comment 10
+          |MyType2|MyType3"
+        `);
+    });
+  });
 });
 
 describe("UnionTypeExtension", () => {
@@ -3681,6 +4055,52 @@ describe("UnionTypeExtension", () => {
       expect(print(node, { minified: true })).toMatchInlineSnapshot(
         '"extend union MyUnionType=MyVeryVeryVeryVeryVeryLongType1|MyVeryVeryVeryVeryVeryLongType2"'
       );
+    });
+  });
+  describe("types with comments", () => {
+    const q = `
+      extend union MyUnionType = MyType1
+      # block comment 9
+      | # inline comment 9
+      # block comment 10
+      MyType2 # inline comment 10
+      | MyType3
+    `;
+    const node = parse(q).definitions[0] as UnionTypeExtensionNode;
+    it("prints pretty without comments", () => {
+      expect(print(node)).toMatchInlineSnapshot(`
+        "extend union MyUnionType = MyType1 | MyType2 | MyType3
+        "
+      `);
+    });
+    it("prints pretty with comments", () => {
+      expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
+        "extend union MyUnionType =
+        | MyType1
+        # block comment 9
+        # inline comment 9
+        # block comment 10
+        # inline comment 10
+        | MyType2
+        | MyType3
+        "
+      `);
+    });
+    it("prints minified without comments", () => {
+      expect(print(node, { minified: true })).toMatchInlineSnapshot(
+        '"extend union MyUnionType=MyType1|MyType2|MyType3"'
+      );
+    });
+    it("prints minified with comments", () => {
+      expect(print(node, { minified: true, preserveComments: true }))
+        .toMatchInlineSnapshot(`
+          "extend union MyUnionType=MyType1
+          #block comment 9
+          #inline comment 9
+          #block comment 10
+          #inline comment 10
+          |MyType2|MyType3"
+        `);
     });
   });
 });

@@ -1,6 +1,5 @@
 // TODO: enforce explicit return types
 // TODO: create helper function to find the next token of a certain kind
-// TODO: instead of just returning list of print tokens, also return the original locs so that we don't have to manually search for tokens
 import {
   ASTNode,
   Kind,
@@ -32,6 +31,8 @@ type Comment = { type: "block_comment" | "inline_comment"; token: Token };
 
 type PrintToken = Text | SoftLine | HardLine | Comment;
 
+type TransformedNode = { p: PrintToken[]; l: Location };
+
 function text(value: string): Text {
   return { type: "text", value };
 }
@@ -53,13 +54,18 @@ function hardLine(indentation?: Indentation): HardLine {
   return { type: "hard_line", indentation };
 }
 
-type NamedTypeSetKinds =
+const BRACES = [TokenKind.BRACE_L, TokenKind.BRACE_R] as const;
+const BRACKETS = [TokenKind.BRACKET_L, TokenKind.BRACKET_R] as const;
+const PARENS = [TokenKind.PAREN_L, TokenKind.PAREN_R] as const;
+
+type DelimitedListKinds =
   | Kind.OBJECT_TYPE_DEFINITION
   | Kind.OBJECT_TYPE_EXTENSION
   | Kind.INTERFACE_TYPE_DEFINITION
   | Kind.INTERFACE_TYPE_EXTENSION
   | Kind.UNION_TYPE_DEFINITION
-  | Kind.UNION_TYPE_EXTENSION;
+  | Kind.UNION_TYPE_EXTENSION
+  | Kind.DIRECTIVE_DEFINITION;
 
 type PrintOptions = {
   indentationStep?: string;
@@ -106,15 +112,18 @@ function printAST(
   }
 
   function printWrappedListWithComments(
-    list: readonly PrintToken[][],
-    openingBracketPunctuator: Text,
+    list: readonly TransformedNode[],
+    [open, close]: readonly [TokenKind, TokenKind],
     spacer: Text[],
     delimiter: Text[],
-    closingBracketPunctuator: Text,
-    startToken: Maybe<Token>,
-    endToken: Maybe<Token>,
     forceMultiLine: boolean = false
   ) {
+    let startToken: Maybe<Token> = list[0].l?.startToken;
+    while (startToken && startToken.kind !== open) startToken = startToken.prev;
+
+    let endToken: Maybe<Token> = list[list.length - 1].l?.endToken;
+    while (endToken && endToken.kind !== close) endToken = endToken.next;
+
     const openingBracket = getComments(startToken);
     const closingBracket = getComments(endToken);
 
@@ -124,7 +133,7 @@ function printAST(
 
     return [
       ...openingBracket,
-      openingBracketPunctuator,
+      text(open),
       shouldPrintMultiLine ? hardLine("+") : softLine(spacer, undefined, "+"),
       ...join(list, [shouldPrintMultiLine ? hardLine() : softLine(delimiter)]),
       shouldPrintMultiLine
@@ -135,192 +144,138 @@ function printAST(
             "-"
           ),
       ...closingBracket,
-      closingBracketPunctuator,
+      text(close),
     ];
   }
 
-  function printArgumentSet(
-    args: Maybe<readonly PrintToken[][]>,
-    maybeStart: Maybe<Token>,
-    maybeEnd?: Maybe<Token>
-  ) {
+  function printArgumentSet(args: Maybe<readonly TransformedNode[]>) {
     if (isEmpty(args)) return [];
-
-    let lParenToken = maybeStart;
-    while (lParenToken && lParenToken.kind !== TokenKind.PAREN_L)
-      lParenToken = lParenToken.next;
-
-    let rParenToken = maybeEnd || lParenToken;
-    while (rParenToken && rParenToken.kind !== TokenKind.PAREN_R)
-      rParenToken = maybeEnd ? rParenToken.prev : rParenToken.next;
-
-    return printWrappedListWithComments(
-      args,
-      text("("),
-      [],
-      [text(","), SPACE],
-      text(")"),
-      lParenToken,
-      rParenToken
-    );
+    return printWrappedListWithComments(args, PARENS, [], [text(","), SPACE]);
   }
 
   function printInputValueDefinitionSet(
-    inputValueDefinitions: Maybe<readonly PrintToken[][]>,
-    parentKind: Kind,
-    start: Maybe<Token>,
-    end: Maybe<Token>
+    inputValueDefinitions: Maybe<readonly TransformedNode[]>,
+    parentKind: Kind
   ) {
     if (isEmpty(inputValueDefinitions)) return [];
 
-    const [startPunctuator, endPunctuator, forceMultiline] =
+    const [openAndClose, forceMultiline] =
       parentKind === Kind.DIRECTIVE_DEFINITION ||
       parentKind === Kind.FIELD_DEFINITION
-        ? [text("("), text(")"), false]
-        : [text("{"), text("}"), true];
+        ? [PARENS, false]
+        : [BRACES, true];
+
     return printWrappedListWithComments(
       inputValueDefinitions,
-      startPunctuator,
+      openAndClose,
       [],
       [text(",")],
-      endPunctuator,
-      start,
-      end,
       forceMultiline
     );
   }
 
   function printOperationTypeDefinitionSet(
-    operationTypes: Maybe<readonly PrintToken[][]>,
-    start: Maybe<Token>,
-    end: Maybe<Token>
+    operationTypes: Maybe<readonly TransformedNode[]>
   ) {
     if (isEmpty(operationTypes)) return [];
     return printWrappedListWithComments(
       operationTypes,
-      text("{"),
+      BRACES,
       [],
       [text(",")],
-      text("}"),
-      start,
-      end,
       true
     );
   }
 
   function printEnumValueDefinitionSet(
-    definitions: Maybe<readonly PrintToken[][]>,
-    start: Maybe<Token>,
-    end: Maybe<Token>
+    definitions: Maybe<readonly TransformedNode[]>
   ) {
     if (isEmpty(definitions)) return [];
     return printWrappedListWithComments(
       definitions,
-      text("{"),
+      BRACES,
       [],
       [text(",")],
-      text("}"),
-      start,
-      end,
       true
     );
   }
 
-  function printFieldDefinitionSet(
-    fields: Maybe<readonly PrintToken[][]>,
-    start: Maybe<Token>,
-    end: Maybe<Token>
-  ) {
+  function printFieldDefinitionSet(fields: Maybe<readonly TransformedNode[]>) {
     if (isEmpty(fields)) return [];
-    return printWrappedListWithComments(
-      fields,
-      text("{"),
-      [],
-      [text(",")],
-      text("}"),
-      start,
-      end,
-      true
-    );
+    return printWrappedListWithComments(fields, BRACES, [], [text(",")], true);
   }
 
-  function printNamedTypeSet(
-    types: Maybe<readonly PrintToken[][]>,
-    parentKind: NamedTypeSetKinds,
-    initializerToken: Maybe<Token>,
-    endToken: Maybe<Token>
+  function printDelimitedList(
+    items: Maybe<readonly TransformedNode[]>,
+    parentKind: DelimitedListKinds,
+    initializerToken: Maybe<Token>
   ) {
-    if (isEmpty(types)) return [];
+    if (isEmpty(items)) return [];
+
     const [initializer, wrapInitializer, delimiterKind] =
       parentKind === Kind.UNION_TYPE_DEFINITION ||
       parentKind === Kind.UNION_TYPE_EXTENSION
         ? ["=", SPACE, TokenKind.PIPE]
+        : parentKind === Kind.DIRECTIVE_DEFINITION
+        ? ["on", text(" "), TokenKind.PIPE]
         : ["implements", text(" "), TokenKind.AMP];
-    const initializerComments = getComments(initializerToken);
 
-    let running = initializerToken?.next;
-    while (
-      running &&
-      running.kind !== delimiterKind &&
-      running.kind !== TokenKind.NAME
-    )
-      running = running.next;
+    let hasComments = false;
+    const itemsWithComments: { comments: PrintToken[]; type: PrintToken[] }[] =
+      [];
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
 
-    let firstNamedTypeComments: Comment[] = [];
-    if (running && running.kind === delimiterKind)
-      firstNamedTypeComments.push(...getComments(running));
+      const nameToken = item.l?.endToken;
+      const comments = getComments(nameToken);
 
-    while (running && running.kind !== TokenKind.NAME) running = running.next;
-    firstNamedTypeComments.push(...getComments(running));
+      let delimiterToken = item.l?.endToken.prev;
+      while (
+        delimiterToken &&
+        (i === 0
+          ? delimiterToken.kind === TokenKind.COMMENT
+          : delimiterToken.kind !== delimiterKind)
+      )
+        delimiterToken = delimiterToken.prev;
+      if (i === 0 && delimiterToken?.kind !== delimiterKind)
+        delimiterToken = null;
+      const delimiterComments = getComments(delimiterToken);
 
-    let hasComments = hasHardLine(types) || firstNamedTypeComments.length > 0;
-
-    const typeList: PrintToken[][] = [
-      [
-        ...firstNamedTypeComments,
-        ...(hasComments
-          ? [
-              ...(firstNamedTypeComments.length === 0 ? [hardLine()] : []),
-              text(minified ? "" : delimiterKind),
-              SPACE,
-            ]
-          : [softLine(wrapInitializer, [text(delimiterKind), SPACE])]),
-        ...filterComments(types[0]).rest,
-      ],
-    ];
-
-    let i = 1;
-    while (running && running !== endToken) {
-      while (running && running.kind !== delimiterKind) running = running?.next;
-      const pipeComments = getComments(running);
-
-      while (running && running.kind !== TokenKind.NAME)
-        running = running?.next;
-      const typeComments = getComments(running);
-
-      typeList.push([
-        ...pipeComments,
-        ...typeComments,
-        ...(hasComments
-          ? pipeComments.length + typeComments.length === 0
-            ? [hardLine()]
-            : []
-          : [softLine(SPACE)]),
-        text(delimiterKind),
-        SPACE,
-        ...filterComments(types[i]).rest,
-      ]);
       hasComments =
-        hasComments || pipeComments.length > 0 || typeComments.length > 0;
-      i++;
+        hasComments || comments.length > 0 || delimiterComments.length > 0;
+
+      itemsWithComments.push({
+        comments: [...delimiterComments, ...comments],
+        type: filterComments(item.p).rest,
+      });
     }
 
-    return [
-      ...initializerComments,
-      ...(initializerComments.length > 0 ? [] : [wrapInitializer]),
-      text(initializer),
-      ...typeList.flat(),
-    ];
+    const itemList: PrintToken[] = getComments(initializerToken);
+    if (itemList.length === 0) itemList.push(wrapInitializer);
+    itemList.push(text(initializer), wrapInitializer);
+
+    for (let i = 0; i < itemsWithComments.length; i++) {
+      itemList.push(...itemsWithComments[i].comments);
+
+      if (minified && i > 0) itemList.push(text(delimiterKind));
+
+      if (!minified) {
+        if (hasComments && itemsWithComments[i].comments.length === 0)
+          itemList.push(hardLine());
+        if (hasComments) itemList.push(text(delimiterKind + " "));
+        else
+          itemList.push(
+            softLine(
+              i === 0 ? [] : text(" " + delimiterKind + " "),
+              text(delimiterKind + " ")
+            )
+          );
+      }
+
+      itemList.push(...itemsWithComments[i].type);
+    }
+
+    return itemList;
   }
 
   function withSpace(list: Maybe<PrintToken[]>) {
@@ -328,12 +283,12 @@ function printAST(
   }
 
   function printDescription(
-    description: Maybe<PrintToken[]>,
+    description: Maybe<TransformedNode>,
     comments: Comment[]
   ) {
     return description
       ? [
-          ...description,
+          ...description.p,
           ...(!minified && (!preserveComments || comments.length === 0)
             ? [hardLine()]
             : []),
@@ -341,1088 +296,870 @@ function printAST(
       : [];
   }
 
-  function printDefaultValue(node: Maybe<PrintToken[]>, token: Maybe<Token>) {
+  function printDefaultValue(node: Maybe<TransformedNode>) {
     if (!node) return [];
 
-    const { comments, rest } = filterComments(node);
+    const { comments, rest } = filterComments(node.p);
 
-    let equalsToken = token;
+    let equalsToken: Maybe<Token> = node.l?.endToken;
     while (equalsToken && equalsToken.kind !== TokenKind.EQUALS)
-      equalsToken = equalsToken.next;
-
-    comments.unshift(...getComments(equalsToken));
+      equalsToken = equalsToken.prev;
+    const equalComments = getComments(equalsToken);
 
     return [
+      ...equalComments,
       ...comments,
-      ...(comments.length > 0 ? [] : [SPACE]),
+      ...(equalComments.length > 0 || comments.length > 0 ? [] : [SPACE]),
       text("="),
       SPACE,
       ...rest,
     ];
   }
 
-  const list = visit<PrintToken[]>(ast, {
+  const list = visit<TransformedNode>(ast, {
     Argument: {
       leave(node) {
-        const nameToken = (node.loc as Location)?.startToken;
-        let colonToken = nameToken?.next;
+        const l = node.loc as Location;
+        let colonToken = node.name.l?.endToken.next;
         while (colonToken && colonToken.kind !== TokenKind.COLON)
           colonToken = colonToken.next;
-        return [
-          ...getComments(nameToken),
-          ...getComments(colonToken),
-          ...node.name,
-          text(":"),
-          SPACE,
-          ...node.value,
-        ];
+        return {
+          p: [
+            ...getComments(node.name.l?.endToken),
+            ...getComments(colonToken),
+            ...node.name.p,
+            text(":"),
+            SPACE,
+            ...node.value.p,
+          ],
+          l,
+        };
       },
     },
     BooleanValue: {
       leave(node) {
-        return [
-          ...getComments((node.loc as Location)?.startToken),
-          text("" + (node.value as unknown as boolean)),
-        ];
+        const l = node.loc as Location;
+        return {
+          p: [
+            ...getComments(l?.endToken),
+            text("" + (node.value as unknown as boolean)),
+          ],
+          l,
+        };
       },
     },
     Directive: {
       leave(node) {
-        const loc = node.loc as Location;
-        let nameToken = loc?.startToken.next;
-        while (nameToken && nameToken.kind !== TokenKind.NAME)
-          nameToken = nameToken.next;
-
-        return [
-          ...getComments(loc?.startToken),
-          ...getComments(nameToken),
-          text("@"),
-          ...node.name,
-          ...printArgumentSet(node.arguments, nameToken?.next, loc?.endToken),
-        ];
+        const l = node.loc as Location;
+        return {
+          p: [
+            ...getComments(l?.startToken),
+            ...getComments(node.name.l?.endToken),
+            text("@"),
+            ...node.name.p,
+            ...printArgumentSet(node.arguments),
+          ],
+          l,
+        };
       },
     },
     DirectiveDefinition: {
       leave(node) {
-        const loc = node.loc as Location;
+        const l = node.loc as Location;
 
-        let keywordToken: Maybe<Token> = loc?.startToken;
+        let keywordToken: Maybe<Token> = l?.startToken;
         while (keywordToken && keywordToken.kind !== TokenKind.NAME)
           keywordToken = keywordToken.next;
 
         let atToken = keywordToken?.next;
         while (atToken && atToken.kind !== TokenKind.AT) atToken = atToken.next;
 
-        let nameToken = atToken?.next;
-        while (nameToken && nameToken.kind !== TokenKind.NAME)
-          nameToken = nameToken.next;
-
-        let lParenToken: Maybe<Token>;
-        let rParenToken: Maybe<Token>;
-        if (!isEmpty(node.arguments)) {
-          lParenToken = nameToken?.next;
-          while (lParenToken && lParenToken.kind !== TokenKind.PAREN_L)
-            lParenToken = lParenToken.next;
-
-          rParenToken = lParenToken?.next;
-          while (rParenToken && rParenToken.kind !== TokenKind.PAREN_R)
-            rParenToken = rParenToken.next;
-        }
-
-        let repeatableToken: Maybe<Token>;
-        if (node.repeatable as unknown as boolean) {
-          repeatableToken = rParenToken?.next || nameToken?.next;
-          while (repeatableToken && repeatableToken.kind !== TokenKind.NAME)
-            repeatableToken = repeatableToken.next;
-        }
-        const repeatableComments = getComments(repeatableToken);
-
-        let onToken =
-          repeatableToken?.next || rParenToken?.next || nameToken?.next;
+        let onToken = atToken?.next;
         while (
           onToken &&
           !(onToken.kind === TokenKind.NAME && onToken.value === "on")
         )
           onToken = onToken.next;
 
-        let running = onToken?.next;
-        while (
-          running &&
-          running.kind !== TokenKind.PIPE &&
-          running.kind !== TokenKind.NAME
-        )
-          running = running.next;
-
-        let firstLocationComments: Comment[] = [];
-        if (running && running.kind === TokenKind.PIPE) {
-          firstLocationComments.push(...getComments(running));
+        let repeatableToken: Maybe<Token>;
+        if (node.repeatable) {
+          repeatableToken = onToken?.prev;
+          while (repeatableToken && repeatableToken.kind === TokenKind.COMMENT)
+            repeatableToken = repeatableToken.prev;
         }
-        while (running && running.kind !== TokenKind.NAME)
-          running = running.next;
-        firstLocationComments.push(...getComments(running));
+        const repeatableComments = getComments(repeatableToken);
 
-        let hasComments = firstLocationComments.length > 0;
-
-        const locations: { comments: Comment[]; location: PrintToken[] }[] = [
-          { comments: firstLocationComments, location: node.locations[0] },
-        ];
-
-        let i = 1;
-        while (running && running !== loc?.endToken) {
-          while (running && running.kind !== TokenKind.PIPE)
-            running = running?.next;
-          const pipeComments = getComments(running);
-
-          while (running && running.kind !== TokenKind.NAME)
-            running = running?.next;
-          const locationComments = getComments(running);
-
-          locations.push({
-            comments: [...pipeComments, ...locationComments],
-            location: node.locations[i],
-          });
-          hasComments =
-            hasComments ||
-            pipeComments.length > 0 ||
-            locationComments.length > 0;
-          i++;
-        }
+        const locations = printDelimitedList(
+          node.locations,
+          node.kind as unknown as DelimitedListKinds,
+          onToken
+        );
 
         const comments = [
           ...getComments(keywordToken),
           ...getComments(atToken),
-          ...getComments(nameToken),
+          ...getComments(node.name.l?.endToken),
         ];
 
-        return [
-          ...printDescription(node.description, comments),
-          ...comments,
-          text("directive"),
-          SPACE,
-          text("@"),
-          ...node.name,
-          ...printInputValueDefinitionSet(
-            node.arguments,
-            node.kind as unknown as Kind,
-            lParenToken,
-            rParenToken
-          ),
-          ...repeatableComments,
-          text(
-            node.repeatable
-              ? repeatableComments.length > 0
-                ? "repeatable "
-                : " repeatable "
-              : " "
-          ),
-          ...(hasComments
-            ? [
-                ...getComments(onToken),
-                text("on"),
-                hardLine(),
-                ...locations.flatMap(({ comments, location }, index) => [
-                  ...comments,
-                  text(minified && index === 0 ? "" : "|"),
-                  SPACE,
-                  ...location,
-                ]),
-              ]
-            : [
-                ...getComments(onToken),
-                text("on"),
-                softLine(text(" "), [text("|"), SPACE]),
-                ...join(node.locations, [softLine(SPACE), text("|"), SPACE]),
-                softLine([]),
-              ]),
-        ];
+        return {
+          p: [
+            ...printDescription(node.description, comments),
+            ...comments,
+            text("directive"),
+            SPACE,
+            text(TokenKind.AT),
+            ...node.name.p,
+            ...printInputValueDefinitionSet(
+              node.arguments,
+              node.kind as unknown as Kind
+            ),
+            ...repeatableComments,
+            text(
+              node.repeatable
+                ? repeatableComments.length > 0
+                  ? "repeatable"
+                  : " repeatable"
+                : ""
+            ),
+            ...locations,
+          ],
+          l,
+        };
       },
     },
     Document: {
       leave(node) {
-        const comments = getComments((node.loc as Location)?.endToken);
-        return [
-          ...join(
-            node.definitions.map((definition) => {
-              while (definition[0].type === "hard_line") definition.shift();
-              return definition;
-            }),
-            [hardLine(), ...(minified ? [] : [hardLine()])]
-          ),
-          ...(minified || comments.length === 0
-            ? []
-            : [hardLine(), hardLine()]),
-          ...comments,
-        ];
+        const l = node.loc as Location;
+        const comments = getComments(l?.endToken);
+        return {
+          p: [
+            ...join(
+              node.definitions.map((definition) => {
+                while (definition.p[0].type === "hard_line")
+                  definition.p.shift();
+                return definition;
+              }),
+              [hardLine(), ...(minified ? [] : [hardLine()])]
+            ),
+            ...(minified || comments.length === 0
+              ? []
+              : [hardLine(), hardLine()]),
+            ...comments,
+          ],
+          l,
+        };
       },
     },
     EnumTypeDefinition: {
       leave(node) {
-        let keywordToken: Maybe<Token> = (node.loc as Location)?.startToken;
+        const l = node.loc as Location;
+
+        let keywordToken: Maybe<Token> = l?.startToken;
         while (keywordToken && keywordToken.kind !== TokenKind.NAME)
           keywordToken = keywordToken.next;
 
-        let nameToken = keywordToken?.next;
-        while (nameToken && nameToken.kind !== TokenKind.NAME)
-          nameToken = nameToken.next;
-
-        let lBraceToken: Maybe<Token>;
-        let rBraceToken: Maybe<Token>;
-        if (!isEmpty(node.values)) {
-          lBraceToken = nameToken?.next;
-          while (lBraceToken && lBraceToken.kind !== TokenKind.BRACE_L)
-            lBraceToken = lBraceToken.next;
-
-          rBraceToken = lBraceToken?.next;
-          while (rBraceToken && rBraceToken.kind !== TokenKind.BRACE_R)
-            rBraceToken = rBraceToken.next;
-        }
-
         const comments = [
           ...getComments(keywordToken),
-          ...getComments(nameToken),
+          ...getComments(node.name.l?.endToken),
         ];
 
-        return [
-          ...printDescription(node.description, comments),
-          ...comments,
-          text("enum "),
-          ...node.name,
-          ...withSpace(join(node.directives || [], [SPACE])),
-          ...withSpace(
-            printEnumValueDefinitionSet(node.values, lBraceToken, rBraceToken)
-          ),
-        ];
+        return {
+          p: [
+            ...printDescription(node.description, comments),
+            ...comments,
+            text("enum "),
+            ...node.name.p,
+            ...withSpace(join(node.directives || [], [SPACE])),
+            ...withSpace(printEnumValueDefinitionSet(node.values)),
+          ],
+          l,
+        };
       },
     },
     EnumTypeExtension: {
       leave(node) {
-        const extendToken = (node.loc as Location)?.startToken;
+        const l = node.loc as Location;
 
-        let keywordToken = extendToken?.next;
+        let keywordToken = l?.startToken.next;
         while (keywordToken && keywordToken.kind !== TokenKind.NAME)
           keywordToken = keywordToken.next;
 
-        let nameToken = keywordToken?.next;
-        while (nameToken && nameToken.kind !== TokenKind.NAME)
-          nameToken = nameToken.next;
-
-        let lBraceToken: Maybe<Token>;
-        let rBraceToken: Maybe<Token>;
-        if (!isEmpty(node.values)) {
-          lBraceToken = nameToken?.next;
-          while (lBraceToken && lBraceToken.kind !== TokenKind.BRACE_L)
-            lBraceToken = lBraceToken.next;
-
-          rBraceToken = lBraceToken?.next;
-          while (rBraceToken && rBraceToken.kind !== TokenKind.BRACE_R)
-            rBraceToken = rBraceToken.next;
-        }
-
-        return [
-          ...getComments(extendToken),
-          ...getComments(keywordToken),
-          ...getComments(nameToken),
-          text("extend enum "),
-          ...node.name,
-          ...withSpace(join(node.directives || [], [SPACE])),
-          ...withSpace(
-            printEnumValueDefinitionSet(node.values, lBraceToken, rBraceToken)
-          ),
-        ];
+        return {
+          p: [
+            ...getComments(l?.startToken),
+            ...getComments(keywordToken),
+            ...getComments(node.name.l?.endToken),
+            text("extend enum "),
+            ...node.name.p,
+            ...withSpace(join(node.directives || [], [SPACE])),
+            ...withSpace(printEnumValueDefinitionSet(node.values)),
+          ],
+          l,
+        };
       },
     },
     EnumValue: {
       leave(node) {
-        return [
-          ...getComments((node.loc as Location)?.startToken),
-          text(node.value as unknown as string),
-        ];
+        const l = node.loc as Location;
+        return {
+          p: [
+            ...getComments(l?.endToken),
+            text(node.value as unknown as string),
+          ],
+          l,
+        };
       },
     },
     EnumValueDefinition: {
       leave(node) {
-        let nameToken: Maybe<Token> = (node.loc as Location)?.startToken;
-        while (nameToken && nameToken.kind !== TokenKind.NAME)
-          nameToken = nameToken.next;
-        const comments = getComments(nameToken);
-        return [
-          ...printDescription(node.description, comments),
-          ...comments,
-          ...node.name,
-          ...withSpace(join(node.directives || [], [SPACE])),
-        ];
+        const l = node.loc as Location;
+        const comments = getComments(node.name.l?.endToken);
+        return {
+          p: [
+            ...printDescription(node.description, comments),
+            ...comments,
+            ...node.name.p,
+            ...withSpace(join(node.directives || [], [SPACE])),
+          ],
+          l,
+        };
       },
     },
     Field: {
       leave(node) {
-        const aliasToken = (node.loc as Location)?.startToken;
+        const l = node.loc as Location;
+
         let colonToken: Maybe<Token>;
-        let nameToken: Maybe<Token>;
         if (node.alias) {
-          colonToken = aliasToken?.next;
+          colonToken = l?.startToken?.next;
           while (colonToken && colonToken.kind !== TokenKind.COLON)
             colonToken = colonToken.next;
-
-          nameToken = colonToken?.next;
-          while (nameToken && nameToken.kind !== TokenKind.NAME)
-            nameToken = nameToken.next;
         }
-        return [
-          ...getComments(aliasToken),
-          ...getComments(colonToken),
-          ...getComments(nameToken),
-          ...(node.alias ? [...node.alias, text(":"), SPACE] : []),
-          ...node.name,
-          ...printArgumentSet(node.arguments, nameToken?.next),
-          ...withSpace(join(node.directives || [], [SPACE])),
-          ...withSpace(node.selectionSet || []),
-        ];
+
+        return {
+          p: [
+            ...getComments(node.alias?.l?.endToken),
+            ...getComments(colonToken),
+            ...getComments(node.name.l?.endToken),
+            ...(node.alias ? [...node.alias.p, text(":"), SPACE] : []),
+            ...node.name.p,
+            ...printArgumentSet(node.arguments),
+            ...withSpace(join(node.directives || [], [SPACE])),
+            ...withSpace(node.selectionSet?.p || []),
+          ],
+          l,
+        };
       },
     },
     FieldDefinition: {
       leave(node) {
-        let nameToken: Maybe<Token> = (node.loc as Location)?.startToken;
-        while (nameToken && nameToken.kind !== TokenKind.NAME)
-          nameToken = nameToken.next;
+        const l = node.loc as Location;
 
-        let lParen: Maybe<Token>;
-        let rParen: Maybe<Token>;
-        if (node.arguments) {
-          lParen = nameToken?.next;
-          while (lParen && lParen.kind !== TokenKind.PAREN_L)
-            lParen = lParen.next;
-
-          rParen = lParen?.next;
-          while (rParen && rParen.kind !== TokenKind.PAREN_R)
-            rParen = rParen.next;
-        }
-
-        let colonToken = rParen?.next || nameToken?.next;
+        let colonToken: Maybe<Token> = node.type.l?.startToken.prev;
         while (colonToken && colonToken.kind !== TokenKind.COLON)
-          colonToken = colonToken.next;
+          colonToken = colonToken.prev;
 
         const comments = [
-          ...getComments(nameToken),
+          ...getComments(node.name.l?.endToken),
           ...getComments(colonToken),
         ];
-        return [
-          ...printDescription(node.description, comments),
-          ...comments,
-          ...node.name,
-          ...printInputValueDefinitionSet(
-            node.arguments,
-            node.kind as unknown as Kind,
-            lParen,
-            rParen
-          ),
-          text(":"),
-          SPACE,
-          ...node.type,
-          ...withSpace(join(node.directives || [], [SPACE])),
-        ];
+
+        return {
+          p: [
+            ...printDescription(node.description, comments),
+            ...comments,
+            ...node.name.p,
+            ...printInputValueDefinitionSet(
+              node.arguments,
+              node.kind as unknown as Kind
+            ),
+            text(":"),
+            SPACE,
+            ...node.type.p,
+            ...withSpace(join(node.directives || [], [SPACE])),
+          ],
+          l,
+        };
       },
     },
     FloatValue: {
       leave(node) {
-        return [
-          ...getComments((node.loc as Location)?.startToken),
-          text(node.value as unknown as string),
-        ];
+        const l = node.loc as Location;
+        return {
+          p: [
+            ...getComments(l?.endToken),
+            text(node.value as unknown as string),
+          ],
+          l,
+        };
       },
     },
     FragmentDefinition: {
       leave(node) {
-        const keywordToken = (node.loc as Location)?.startToken;
-        let nameToken = keywordToken?.next;
-        while (nameToken && nameToken.kind !== TokenKind.NAME)
-          nameToken = nameToken.next;
-        let onToken = nameToken?.next;
+        const l = node.loc as Location;
+
+        let onToken: Maybe<Token> = node.typeCondition.l?.endToken.prev;
         while (onToken && onToken.kind !== TokenKind.NAME)
-          onToken = onToken.next;
-        return [
-          ...getComments(keywordToken),
-          ...getComments(nameToken),
-          ...getComments(onToken),
-          text("fragment "),
-          ...node.name,
-          ...(node.typeCondition ? [text(" on "), ...node.typeCondition] : []),
-          ...withSpace(join(node.directives || [], [SPACE])),
-          ...withSpace(node.selectionSet),
-        ];
+          onToken = onToken.prev;
+
+        return {
+          p: [
+            ...getComments(l?.startToken),
+            ...getComments(node.name.l?.endToken),
+            ...getComments(onToken),
+            text("fragment "),
+            ...node.name.p,
+            text(" on "),
+            ...node.typeCondition.p,
+            ...withSpace(join(node.directives || [], [SPACE])),
+            ...withSpace(node.selectionSet.p),
+          ],
+          l,
+        };
       },
     },
     FragmentSpread: {
       leave(node) {
-        const spreadToken = (node.loc as Location)?.startToken;
-        let nameToken = spreadToken?.next;
-        while (nameToken && nameToken.kind !== TokenKind.NAME)
-          nameToken = nameToken.next;
-        return [
-          ...getComments(spreadToken),
-          ...getComments(nameToken),
-          text("..."),
-          ...node.name,
-          ...withSpace(join(node.directives || [], [SPACE])),
-        ];
+        const l = node.loc as Location;
+        return {
+          p: [
+            ...getComments(l?.startToken),
+            ...getComments(node.name.l?.endToken),
+            text("..."),
+            ...node.name.p,
+            ...withSpace(join(node.directives || [], [SPACE])),
+          ],
+          l,
+        };
       },
     },
     InlineFragment: {
       leave(node) {
-        const spreadToken = (node.loc as Location)?.startToken;
+        const l = node.loc as Location;
+
         let onToken: Maybe<Token>;
         if (node.typeCondition) {
-          onToken = spreadToken?.next;
+          onToken = node.typeCondition.l?.endToken.prev;
           while (onToken && onToken.kind !== TokenKind.NAME)
-            onToken = onToken.next;
+            onToken = onToken.prev;
         }
-        return [
-          ...getComments(spreadToken),
-          ...getComments(onToken),
-          text("..."),
-          ...(node.typeCondition ? [text("on "), ...node.typeCondition] : []),
-          ...withSpace(join(node.directives || [], [SPACE])),
-          ...withSpace(node.selectionSet),
-        ];
+
+        return {
+          p: [
+            ...getComments(l?.startToken),
+            ...getComments(onToken),
+            text("..."),
+            ...(node.typeCondition
+              ? [text("on "), ...node.typeCondition.p]
+              : []),
+            ...withSpace(join(node.directives || [], [SPACE])),
+            ...withSpace(node.selectionSet.p),
+          ],
+          l,
+        };
       },
     },
     InputObjectTypeDefinition: {
       leave(node) {
-        const loc = node.loc as Location;
+        const l = node.loc as Location;
 
-        let keywordToken: Maybe<Token> = loc?.startToken;
+        let keywordToken: Maybe<Token> = l?.startToken;
         while (keywordToken && keywordToken.kind !== TokenKind.NAME)
           keywordToken = keywordToken.next;
 
-        let nameToken = keywordToken?.next;
-        while (nameToken && nameToken.kind !== TokenKind.NAME)
-          nameToken = nameToken.next;
-
-        let lBraceToken: Maybe<Token>;
-        if (node.fields) {
-          lBraceToken = nameToken?.next;
-          while (lBraceToken && lBraceToken.kind !== TokenKind.BRACE_L)
-            lBraceToken = lBraceToken.next;
-        }
-
         const comments = [
           ...getComments(keywordToken),
-          ...getComments(nameToken),
+          ...getComments(node.name.l?.endToken),
         ];
-        return [
-          ...printDescription(node.description, comments),
-          ...comments,
-          text("input "),
-          ...node.name,
-          ...withSpace(join(node.directives || [], [SPACE])),
-          ...withSpace(
-            printInputValueDefinitionSet(
-              node.fields,
-              node.kind as unknown as Kind,
-              lBraceToken,
-              loc?.endToken
-            )
-          ),
-        ];
+        return {
+          p: [
+            ...printDescription(node.description, comments),
+            ...comments,
+            text("input "),
+            ...node.name.p,
+            ...withSpace(join(node.directives || [], [SPACE])),
+            ...withSpace(
+              printInputValueDefinitionSet(
+                node.fields,
+                node.kind as unknown as Kind
+              )
+            ),
+          ],
+          l,
+        };
       },
     },
     InputObjectTypeExtension: {
       leave(node) {
-        const loc = node.loc as Location;
+        const l = node.loc as Location;
 
-        const extendToken = loc?.startToken;
-
-        let keywordToken = extendToken?.next;
+        let keywordToken = l?.startToken?.next;
         while (keywordToken && keywordToken.kind !== TokenKind.NAME)
           keywordToken = keywordToken.next;
 
-        let nameToken = keywordToken?.next;
-        while (nameToken && nameToken.kind !== TokenKind.NAME)
-          nameToken = nameToken.next;
-
-        let lBraceToken: Maybe<Token>;
-        if (node.fields) {
-          lBraceToken = nameToken?.next;
-          while (lBraceToken && lBraceToken.kind !== TokenKind.BRACE_L)
-            lBraceToken = lBraceToken.next;
-        }
-
-        return [
-          ...getComments(extendToken),
-          ...getComments(keywordToken),
-          ...getComments(nameToken),
-          text("extend input "),
-          ...node.name,
-          ...withSpace(join(node.directives || [], [SPACE])),
-          ...withSpace(
-            printInputValueDefinitionSet(
-              node.fields,
-              node.kind as unknown as Kind,
-              lBraceToken,
-              loc?.endToken
-            )
-          ),
-        ];
+        return {
+          p: [
+            ...getComments(l?.startToken),
+            ...getComments(keywordToken),
+            ...getComments(node.name.l?.endToken),
+            text("extend input "),
+            ...node.name.p,
+            ...withSpace(join(node.directives || [], [SPACE])),
+            ...withSpace(
+              printInputValueDefinitionSet(
+                node.fields,
+                node.kind as unknown as Kind
+              )
+            ),
+          ],
+          l,
+        };
       },
     },
     InputValueDefinition: {
       leave(node) {
-        let nameToken: Maybe<Token> = (node.loc as Location)?.startToken;
-        while (nameToken && nameToken.kind !== TokenKind.NAME)
-          nameToken = nameToken.next;
+        const l = node.loc as Location;
 
-        let colonToken = nameToken?.next;
+        let colonToken = node.name.l?.endToken.next;
         while (colonToken && colonToken.kind !== TokenKind.COLON)
           colonToken = colonToken.next;
 
         const comments = [
-          ...getComments(nameToken),
+          ...getComments(node.name.l?.endToken),
           ...getComments(colonToken),
         ];
 
-        return [
-          ...printDescription(node.description, comments),
-          ...comments,
-          ...node.name,
-          text(":"),
-          SPACE,
-          ...node.type,
-          ...printDefaultValue(node.defaultValue, colonToken?.next),
-          ...withSpace(join(node.directives || [], [SPACE])),
-        ];
+        return {
+          p: [
+            ...printDescription(node.description, comments),
+            ...comments,
+            ...node.name.p,
+            text(":"),
+            SPACE,
+            ...node.type.p,
+            ...printDefaultValue(node.defaultValue),
+            ...withSpace(join(node.directives || [], [SPACE])),
+          ],
+          l,
+        };
       },
     },
     InterfaceTypeDefinition: {
       leave(node) {
-        const loc = node.loc as Location;
+        const l = node.loc as Location;
 
-        let keywordToken: Maybe<Token> = loc?.startToken;
+        let keywordToken: Maybe<Token> = l?.startToken;
         while (keywordToken && keywordToken.kind !== TokenKind.NAME)
           keywordToken = keywordToken.next;
 
-        let nameToken = keywordToken?.next;
-        while (nameToken && nameToken.kind !== TokenKind.NAME)
-          nameToken = nameToken.next;
-
-        // TODO: this is a huge chunk of duplicated code (see ObjectTypeExtension, InterfaceTypeDefinition, InterfaceTypeExtension)
         let implementsToken: Maybe<Token>;
-        let endToken: Maybe<Token>;
         if (!isEmpty(node.interfaces)) {
-          implementsToken = nameToken?.next;
+          implementsToken = node.name.l?.endToken.next;
           while (implementsToken && implementsToken.kind !== TokenKind.NAME)
             implementsToken = implementsToken.next;
-
-          endToken = implementsToken?.next;
-          while (endToken && endToken.kind !== TokenKind.NAME)
-            endToken = endToken.next;
-
-          while (true) {
-            let nextToken = endToken?.next;
-            while (nextToken && nextToken.kind === TokenKind.COMMENT)
-              nextToken = nextToken.next;
-
-            if (nextToken?.kind !== TokenKind.AMP) break;
-
-            nextToken = nextToken.next;
-            while (nextToken && nextToken.kind !== TokenKind.NAME)
-              nextToken = nextToken.next;
-            endToken = nextToken;
-          }
-        }
-
-        let lBraceToken: Maybe<Token>;
-        if (!isEmpty(node.fields)) {
-          lBraceToken = endToken?.next || nameToken?.next;
-          while (lBraceToken && lBraceToken.kind !== TokenKind.BRACE_L)
-            lBraceToken = lBraceToken.next;
         }
 
         const comments = [
           ...getComments(keywordToken),
-          ...getComments(nameToken),
+          ...getComments(node.name.l?.endToken),
         ];
-        return [
-          ...printDescription(node.description, comments),
-          ...comments,
-          text("interface "),
-          ...node.name,
-          ...printNamedTypeSet(
-            node.interfaces,
-            node.kind as unknown as NamedTypeSetKinds,
-            implementsToken,
-            endToken
-          ),
-          ...withSpace(join(node.directives || [], [SPACE])),
-          ...withSpace(
-            printFieldDefinitionSet(node.fields, lBraceToken, loc?.endToken)
-          ),
-        ];
+        return {
+          p: [
+            ...printDescription(node.description, comments),
+            ...comments,
+            text("interface "),
+            ...node.name.p,
+            ...printDelimitedList(
+              node.interfaces,
+              node.kind as unknown as DelimitedListKinds,
+              implementsToken
+            ),
+            ...withSpace(join(node.directives || [], [SPACE])),
+            ...withSpace(printFieldDefinitionSet(node.fields)),
+          ],
+          l,
+        };
       },
     },
     InterfaceTypeExtension: {
       leave(node) {
-        const loc = node.loc as Location;
+        const l = node.loc as Location;
 
-        const extendToken: Maybe<Token> = loc?.startToken;
-
-        let keywordToken: Maybe<Token> = extendToken?.next;
+        let keywordToken: Maybe<Token> = l?.startToken.next;
         while (keywordToken && keywordToken.kind !== TokenKind.NAME)
           keywordToken = keywordToken.next;
 
-        let nameToken = keywordToken?.next;
-        while (nameToken && nameToken.kind !== TokenKind.NAME)
-          nameToken = nameToken.next;
-
         let implementsToken: Maybe<Token>;
-        let endToken: Maybe<Token>;
         if (!isEmpty(node.interfaces)) {
-          implementsToken = nameToken?.next;
+          implementsToken = node.name.l?.endToken.next;
           while (implementsToken && implementsToken.kind !== TokenKind.NAME)
             implementsToken = implementsToken.next;
-
-          endToken = implementsToken?.next;
-          while (endToken && endToken.kind !== TokenKind.NAME)
-            endToken = endToken.next;
-
-          while (true) {
-            let nextToken = endToken?.next;
-            while (nextToken && nextToken.kind === TokenKind.COMMENT)
-              nextToken = nextToken.next;
-
-            if (nextToken?.kind !== TokenKind.AMP) break;
-
-            nextToken = nextToken.next;
-            while (nextToken && nextToken.kind !== TokenKind.NAME)
-              nextToken = nextToken.next;
-            endToken = nextToken;
-          }
         }
 
-        let lBraceToken: Maybe<Token>;
-        if (!isEmpty(node.fields)) {
-          lBraceToken = endToken?.next || nameToken?.next;
-          while (lBraceToken && lBraceToken.kind !== TokenKind.BRACE_L)
-            lBraceToken = lBraceToken.next;
-        }
-
-        return [
-          ...getComments(extendToken),
-          ...getComments(keywordToken),
-          ...getComments(nameToken),
-          text("extend interface "),
-          ...node.name,
-          ...printNamedTypeSet(
-            node.interfaces,
-            node.kind as unknown as NamedTypeSetKinds,
-            implementsToken,
-            endToken
-          ),
-          ...withSpace(join(node.directives || [], [SPACE])),
-          ...withSpace(
-            printFieldDefinitionSet(node.fields, lBraceToken, loc?.endToken)
-          ),
-        ];
+        return {
+          p: [
+            ...getComments(l?.startToken),
+            ...getComments(keywordToken),
+            ...getComments(node.name.l?.endToken),
+            text("extend interface "),
+            ...node.name.p,
+            ...printDelimitedList(
+              node.interfaces,
+              node.kind as unknown as DelimitedListKinds,
+              implementsToken
+            ),
+            ...withSpace(join(node.directives || [], [SPACE])),
+            ...withSpace(printFieldDefinitionSet(node.fields)),
+          ],
+          l,
+        };
       },
     },
     IntValue: {
       leave(node) {
-        return [
-          ...getComments((node.loc as Location)?.startToken),
-          text(node.value as unknown as string),
-        ];
+        const l = node.loc as Location;
+        return {
+          p: [
+            ...getComments(l?.endToken),
+            text(node.value as unknown as string),
+          ],
+          l,
+        };
       },
     },
     ListType: {
       leave(node) {
-        const loc = node.loc as Location;
-        const start = getComments(loc?.startToken);
-        const end = getComments(loc?.endToken);
-        const { comments, rest } = filterComments(node.type);
-        return [...start, ...comments, ...end, text("["), ...rest, text("]")];
+        const l = node.loc as Location;
+        const { comments, rest } = filterComments(node.type.p);
+        return {
+          p: [
+            ...getComments(l?.startToken),
+            ...comments,
+            ...getComments(l?.endToken),
+            text("["),
+            ...rest,
+            text("]"),
+          ],
+          l,
+        };
       },
     },
     ListValue: {
       leave(node) {
-        return printWrappedListWithComments(
-          node.values,
-          text("["),
-          [],
-          [text(","), SPACE],
-          text("]"),
-          (node.loc as Location)?.startToken,
-          (node.loc as Location)?.endToken
-        );
+        const l = node.loc as Location;
+        return {
+          p: isEmpty(node.values)
+            ? [
+                ...getComments(l?.startToken),
+                text(TokenKind.BRACKET_L),
+                ...getComments(l?.endToken),
+                text(TokenKind.BRACKET_R),
+              ]
+            : printWrappedListWithComments(
+                node.values,
+                BRACKETS,
+                [],
+                [text(","), SPACE]
+              ),
+          l,
+        };
       },
     },
     Name: {
       leave(node) {
-        return [text(node.value as unknown as string)];
+        const l = node.loc as Location;
+        return { p: [text(node.value as unknown as string)], l };
       },
     },
     NamedType: {
       leave(node) {
-        return [
-          ...getComments((node.loc as Location)?.startToken),
-          ...node.name,
-        ];
+        const l = node.loc as Location;
+        return {
+          p: [...getComments(l?.endToken), ...node.name.p],
+          l,
+        };
       },
     },
     NonNullType: {
       leave(node) {
-        const { comments, rest } = filterComments(node.type);
-        return [
-          ...comments,
-          ...getComments((node.loc as Location)?.endToken),
-          ...rest,
-          text("!"),
-        ];
+        const l = node.loc as Location;
+        const { comments, rest } = filterComments(node.type.p);
+        return {
+          p: [...comments, ...getComments(l?.endToken), ...rest, text("!")],
+          l,
+        };
       },
     },
     NullValue: {
       leave(node) {
-        return [
-          ...getComments((node.loc as Location)?.startToken),
-          text("null"),
-        ];
+        const l = node.loc as Location;
+        return {
+          p: [...getComments(l?.endToken), text("null")],
+          l,
+        };
       },
     },
     ObjectField: {
       leave(node) {
-        const nameToken = (node.loc as Location)?.startToken;
-        let colonToken = nameToken?.next;
+        const l = node.loc as Location;
+        let colonToken = node.name.l?.endToken.next;
         while (colonToken && colonToken.kind !== TokenKind.COLON)
           colonToken = colonToken.next;
-        return [
-          ...getComments(nameToken),
-          ...getComments(colonToken),
-          ...node.name,
-          text(":"),
-          SPACE,
-          ...node.value,
-        ];
+        return {
+          p: [
+            ...getComments(node.name.l?.endToken),
+            ...getComments(colonToken),
+            ...node.name.p,
+            text(":"),
+            SPACE,
+            ...node.value.p,
+          ],
+          l,
+        };
       },
     },
     ObjectTypeDefinition: {
       leave(node) {
-        const loc = node.loc as Location;
+        const l = node.loc as Location;
 
-        let keywordToken: Maybe<Token> = loc?.startToken;
+        let keywordToken: Maybe<Token> = l?.startToken;
         while (keywordToken && keywordToken.kind !== TokenKind.NAME)
           keywordToken = keywordToken.next;
 
-        let nameToken = keywordToken?.next;
-        while (nameToken && nameToken.kind !== TokenKind.NAME)
-          nameToken = nameToken.next;
-
-        // TODO: this is a huge chunk of duplicated code (see ObjectTypeExtension, InterfaceTypeDefinition, InterfaceTypeExtension)
         let implementsToken: Maybe<Token>;
-        let endToken: Maybe<Token>;
         if (!isEmpty(node.interfaces)) {
-          implementsToken = nameToken?.next;
+          implementsToken = node.name.l?.endToken.next;
           while (implementsToken && implementsToken.kind !== TokenKind.NAME)
             implementsToken = implementsToken.next;
-
-          endToken = implementsToken?.next;
-          while (endToken && endToken.kind !== TokenKind.NAME)
-            endToken = endToken.next;
-
-          while (true) {
-            let nextToken = endToken?.next;
-            while (nextToken && nextToken.kind === TokenKind.COMMENT)
-              nextToken = nextToken.next;
-
-            if (nextToken?.kind !== TokenKind.AMP) break;
-
-            nextToken = nextToken.next;
-            while (nextToken && nextToken.kind !== TokenKind.NAME)
-              nextToken = nextToken.next;
-            endToken = nextToken;
-          }
-        }
-
-        let lBraceToken: Maybe<Token>;
-        if (!isEmpty(node.fields)) {
-          lBraceToken = endToken?.next || nameToken?.next;
-          while (lBraceToken && lBraceToken.kind !== TokenKind.BRACE_L)
-            lBraceToken = lBraceToken.next;
         }
 
         const comments = [
           ...getComments(keywordToken),
-          ...getComments(nameToken),
+          ...getComments(node.name.l?.endToken),
         ];
-        return [
-          ...printDescription(node.description, comments),
-          ...comments,
-          text("type "),
-          ...node.name,
-          ...printNamedTypeSet(
-            node.interfaces,
-            node.kind as unknown as NamedTypeSetKinds,
-            implementsToken,
-            endToken
-          ),
-          ...withSpace(join(node.directives || [], [SPACE])),
-          ...withSpace(
-            printFieldDefinitionSet(node.fields, lBraceToken, loc?.endToken)
-          ),
-        ];
+        return {
+          p: [
+            ...printDescription(node.description, comments),
+            ...comments,
+            text("type "),
+            ...node.name.p,
+            ...printDelimitedList(
+              node.interfaces,
+              node.kind as unknown as DelimitedListKinds,
+              implementsToken
+            ),
+            ...withSpace(join(node.directives || [], [SPACE])),
+            ...withSpace(printFieldDefinitionSet(node.fields)),
+          ],
+          l,
+        };
       },
     },
     ObjectTypeExtension: {
       leave(node) {
-        const loc = node.loc as Location;
+        const l = node.loc as Location;
 
-        const extendToken: Maybe<Token> = loc?.startToken;
-
-        let keywordToken: Maybe<Token> = extendToken?.next;
+        let keywordToken: Maybe<Token> = l?.startToken.next;
         while (keywordToken && keywordToken.kind !== TokenKind.NAME)
           keywordToken = keywordToken.next;
 
-        let nameToken = keywordToken?.next;
-        while (nameToken && nameToken.kind !== TokenKind.NAME)
-          nameToken = nameToken.next;
-
         let implementsToken: Maybe<Token>;
-        let endToken: Maybe<Token>;
         if (!isEmpty(node.interfaces)) {
-          implementsToken = nameToken?.next;
+          implementsToken = node.name.l?.endToken.next;
           while (implementsToken && implementsToken.kind !== TokenKind.NAME)
             implementsToken = implementsToken.next;
-
-          endToken = implementsToken?.next;
-          while (endToken && endToken.kind !== TokenKind.NAME)
-            endToken = endToken.next;
-
-          while (true) {
-            let nextToken = endToken?.next;
-            while (nextToken && nextToken.kind === TokenKind.COMMENT)
-              nextToken = nextToken.next;
-
-            if (nextToken?.kind !== TokenKind.AMP) break;
-
-            nextToken = nextToken.next;
-            while (nextToken && nextToken.kind !== TokenKind.NAME)
-              nextToken = nextToken.next;
-            endToken = nextToken;
-          }
         }
 
-        let lBraceToken: Maybe<Token>;
-        if (!isEmpty(node.fields)) {
-          lBraceToken = endToken?.next || nameToken?.next;
-          while (lBraceToken && lBraceToken.kind !== TokenKind.BRACE_L)
-            lBraceToken = lBraceToken.next;
-        }
-
-        return [
-          ...getComments(extendToken),
-          ...getComments(keywordToken),
-          ...getComments(nameToken),
-          text("extend type "),
-          ...node.name,
-          ...printNamedTypeSet(
-            node.interfaces,
-            node.kind as unknown as NamedTypeSetKinds,
-            implementsToken,
-            endToken
-          ),
-          ...withSpace(join(node.directives || [], [SPACE])),
-          ...withSpace(
-            printFieldDefinitionSet(node.fields, lBraceToken, loc?.endToken)
-          ),
-        ];
+        return {
+          p: [
+            ...getComments(l?.startToken),
+            ...getComments(keywordToken),
+            ...getComments(node.name.l?.endToken),
+            text("extend type "),
+            ...node.name.p,
+            ...printDelimitedList(
+              node.interfaces,
+              node.kind as unknown as DelimitedListKinds,
+              implementsToken
+            ),
+            ...withSpace(join(node.directives || [], [SPACE])),
+            ...withSpace(printFieldDefinitionSet(node.fields)),
+          ],
+          l,
+        };
       },
     },
     ObjectValue: {
       leave(node) {
-        return printWrappedListWithComments(
-          node.fields,
-          text("{"),
-          [SPACE],
-          [text(","), SPACE],
-          text("}"),
-          (node.loc as Location)?.startToken,
-          (node.loc as Location)?.endToken
-        );
+        const l = node.loc as Location;
+        return {
+          p: isEmpty(node.fields)
+            ? [
+                ...getComments(l?.startToken),
+                text(TokenKind.BRACE_L),
+                ...getComments(l?.endToken),
+                text(TokenKind.BRACE_R),
+              ]
+            : printWrappedListWithComments(
+                node.fields,
+                BRACES,
+                [SPACE],
+                [text(","), SPACE]
+              ),
+          l,
+        };
       },
     },
     OperationDefinition: {
       leave(node) {
-        const keywordToken = (node.loc as Location)?.startToken;
+        const l = node.loc as Location;
+
+        const keywordToken = l?.startToken;
 
         // Query shorthand
         if (keywordToken?.kind === TokenKind.BRACE_L) return node.selectionSet;
 
-        let nameToken = keywordToken?.next;
-        while (nameToken && nameToken.kind !== TokenKind.NAME)
-          nameToken = nameToken.next;
-
-        const hasVariables = !isEmpty(node.variableDefinitions);
-        let lParenToken: Maybe<Token>;
-        let rParenToken: Maybe<Token>;
-        if (hasVariables) {
-          lParenToken = nameToken?.next;
-          while (lParenToken && lParenToken.kind !== TokenKind.PAREN_L)
-            lParenToken = lParenToken.next;
-
-          rParenToken = lParenToken?.next;
-          while (rParenToken && rParenToken.kind !== TokenKind.PAREN_R)
-            rParenToken = rParenToken.next;
-        }
-
-        return [
-          ...getComments(keywordToken),
-          ...getComments(nameToken),
-          text(node.operation as unknown as OperationTypeNode),
-          ...(node.name ? [text(" "), ...node.name] : []),
-          ...(hasVariables
-            ? printWrappedListWithComments(
-                node.variableDefinitions,
-                text("("),
-                [],
-                [text(","), SPACE],
-                text(")"),
-                lParenToken,
-                rParenToken
-              )
-            : []),
-          ...withSpace(join(node.directives || [], [SPACE])),
-          ...withSpace(node.selectionSet),
-        ];
+        return {
+          p: [
+            ...getComments(keywordToken),
+            ...getComments(node.name?.l?.endToken),
+            text(node.operation as unknown as OperationTypeNode),
+            ...(node.name ? [text(" "), ...node.name.p] : []),
+            ...(isEmpty(node.variableDefinitions)
+              ? []
+              : printWrappedListWithComments(
+                  node.variableDefinitions,
+                  PARENS,
+                  [],
+                  [text(","), SPACE]
+                )),
+            ...withSpace(join(node.directives || [], [SPACE])),
+            ...withSpace(node.selectionSet.p),
+          ],
+          l,
+        };
       },
     },
     OperationTypeDefinition: {
       leave(node) {
-        const operationTypeToken = (node.loc as Location)?.startToken;
-        let colonToken = operationTypeToken?.next;
+        const l = node.loc as Location;
+
+        let colonToken = l?.startToken.next;
         while (colonToken && colonToken.kind !== TokenKind.COLON)
           colonToken = colonToken.next;
-        return [
-          ...getComments(operationTypeToken),
-          ...getComments(colonToken),
-          text(node.operation as unknown as OperationTypeNode),
-          text(":"),
-          SPACE,
-          ...node.type,
-        ];
+        return {
+          p: [
+            ...getComments(l?.startToken),
+            ...getComments(colonToken),
+            text(node.operation as unknown as OperationTypeNode),
+            text(":"),
+            SPACE,
+            ...node.type.p,
+          ],
+          l,
+        };
       },
     },
     ScalarTypeDefinition: {
       leave(node) {
-        let keywordToken: Maybe<Token> = (node.loc as Location)?.startToken;
+        const l = node.loc as Location;
+
+        let keywordToken: Maybe<Token> = l?.startToken;
         while (keywordToken && keywordToken.kind !== TokenKind.NAME)
           keywordToken = keywordToken.next;
 
-        let nameToken = keywordToken?.next;
-        while (nameToken && nameToken.kind !== TokenKind.NAME)
-          nameToken = nameToken.next;
-
         const comments = [
           ...getComments(keywordToken),
-          ...getComments(nameToken),
+          ...getComments(node.name.l?.endToken),
         ];
 
-        return [
-          ...printDescription(node.description, comments),
-          ...comments,
-          text("scalar "),
-          ...node.name,
-          ...withSpace(join(node.directives || [], [SPACE])),
-        ];
+        return {
+          p: [
+            ...printDescription(node.description, comments),
+            ...comments,
+            text("scalar "),
+            ...node.name.p,
+            ...withSpace(join(node.directives || [], [SPACE])),
+          ],
+          l,
+        };
       },
     },
     ScalarTypeExtension: {
       leave(node) {
-        const extendToken = (node.loc as Location)?.startToken;
+        const l = node.loc as Location;
 
-        let keywordToken = extendToken?.next;
+        let keywordToken = l?.startToken.next;
         while (keywordToken && keywordToken.kind !== TokenKind.NAME)
           keywordToken = keywordToken.next;
 
-        let nameToken = keywordToken?.next;
-        while (nameToken && nameToken.kind !== TokenKind.NAME)
-          nameToken = nameToken.next;
-
-        return [
-          ...getComments(extendToken),
-          ...getComments(keywordToken),
-          ...getComments(nameToken),
-          text("extend scalar "),
-          ...node.name,
-          ...withSpace(join(node.directives || [], [SPACE])),
-        ];
+        return {
+          p: [
+            ...getComments(l?.startToken),
+            ...getComments(keywordToken),
+            ...getComments(node.name.l?.endToken),
+            text("extend scalar "),
+            ...node.name.p,
+            ...withSpace(join(node.directives || [], [SPACE])),
+          ],
+          l,
+        };
       },
     },
     SchemaDefinition: {
       leave(node) {
-        const loc = node.loc as Location;
+        const l = node.loc as Location;
 
-        let keywordToken: Maybe<Token> = loc?.startToken;
+        let keywordToken: Maybe<Token> = l?.startToken;
         while (keywordToken && keywordToken.kind !== TokenKind.NAME)
           keywordToken = keywordToken.next;
         const comments = getComments(keywordToken);
 
-        let lBraceToken = keywordToken?.next;
-        while (lBraceToken && lBraceToken.kind !== TokenKind.BRACE_L)
-          lBraceToken = lBraceToken.next;
-
-        return [
-          ...printDescription(node.description, comments),
-          ...comments,
-          text("schema"),
-          ...withSpace(join(node.directives || [], [SPACE])),
-          ...withSpace(
-            printOperationTypeDefinitionSet(
-              node.operationTypes,
-              lBraceToken,
-              loc?.endToken
-            )
-          ),
-        ];
+        return {
+          p: [
+            ...printDescription(node.description, comments),
+            ...comments,
+            text("schema"),
+            ...withSpace(join(node.directives || [], [SPACE])),
+            ...withSpace(printOperationTypeDefinitionSet(node.operationTypes)),
+          ],
+          l,
+        };
       },
     },
     SchemaExtension: {
       leave(node) {
-        const loc = node.loc as Location;
+        const l = node.loc as Location;
 
-        let keywordToken = loc?.startToken.next;
+        let keywordToken = l?.startToken.next;
         while (keywordToken && keywordToken.kind !== TokenKind.NAME)
           keywordToken = keywordToken.next;
 
-        let lBraceToken: Maybe<Token>;
-        if (!isEmpty(node.operationTypes)) {
-          lBraceToken = keywordToken?.next;
-          while (lBraceToken && lBraceToken.kind !== TokenKind.BRACE_L)
-            lBraceToken = lBraceToken.next;
-        }
-
-        return [
-          ...getComments(loc?.startToken),
-          ...getComments(keywordToken),
-          text("extend schema"),
-          ...withSpace(join(node.directives || [], [SPACE])),
-          ...withSpace(
-            printOperationTypeDefinitionSet(
-              node.operationTypes,
-              lBraceToken,
-              loc?.endToken
-            )
-          ),
-        ];
+        return {
+          p: [
+            ...getComments(l?.startToken),
+            ...getComments(keywordToken),
+            text("extend schema"),
+            ...withSpace(join(node.directives || [], [SPACE])),
+            ...withSpace(printOperationTypeDefinitionSet(node.operationTypes)),
+          ],
+          l,
+        };
       },
     },
     SelectionSet: {
       leave(node) {
-        return printWrappedListWithComments(
-          node.selections,
-          text("{"),
-          [],
-          [text(",")],
-          text("}"),
-          (node.loc as Location)?.startToken,
-          (node.loc as Location)?.endToken,
-          true
-        );
+        const l = node.loc as Location;
+        return {
+          p: printWrappedListWithComments(
+            node.selections,
+            BRACES,
+            [],
+            [text(",")],
+            true
+          ),
+          l,
+        };
       },
     },
     StringValue: {
@@ -1435,11 +1172,11 @@ function printAST(
          * we calculate that ourselves by looking at the complete source body.)
          */
 
-        const loc = node.loc as Location;
-        const token = loc?.startToken;
+        const l = node.loc as Location;
+        const token = l?.endToken;
 
         const comments: Comment[] = [];
-        if (preserveComments && loc && token) {
+        if (preserveComments && l && token) {
           let running = token.prev;
           while (
             running?.kind === TokenKind.COMMENT &&
@@ -1451,7 +1188,7 @@ function printAST(
 
           const line =
             token.kind === TokenKind.BLOCK_STRING
-              ? loc.source.body.slice(0, token.end).split("\n").length
+              ? l.source.body.slice(0, token.end).split("\n").length
               : token.line;
           if (
             token.next?.kind === TokenKind.COMMENT &&
@@ -1460,134 +1197,140 @@ function printAST(
             comments.push({ type: "inline_comment", token: token.next });
         }
 
-        return [
-          ...comments,
-          ...(node.block
-            ? [
-                text('"""'),
-                ...(/[\n\r]/.test(node.value as unknown as string)
-                  ? [hardLine()]
-                  : []),
-                text(
-                  (node.value as unknown as string).replace(/"""/g, '\\"""')
-                ),
-                ...(/[\n\r]/.test(node.value as unknown as string)
-                  ? [hardLine()]
-                  : []),
-                text('"""'),
-              ]
-            : [text(JSON.stringify(node.value))]),
-        ];
+        return {
+          p: [
+            ...comments,
+            ...((node.block as unknown as boolean)
+              ? [
+                  text('"""'),
+                  ...(/[\n\r]/.test(node.value as unknown as string)
+                    ? [hardLine()]
+                    : []),
+                  text(
+                    (node.value as unknown as string).replace(/"""/g, '\\"""')
+                  ),
+                  ...(/[\n\r]/.test(node.value as unknown as string)
+                    ? [hardLine()]
+                    : []),
+                  text('"""'),
+                ]
+              : [text(JSON.stringify(node.value))]),
+          ],
+          l,
+        };
       },
     },
     UnionTypeDefinition: {
       leave(node) {
-        let loc = node.loc as Location;
+        const l = node.loc as Location;
 
-        let keywordToken: Maybe<Token> = loc?.startToken;
+        let keywordToken: Maybe<Token> = l?.startToken;
         while (keywordToken && keywordToken.kind !== TokenKind.NAME)
           keywordToken = keywordToken.next;
 
-        let nameToken = keywordToken?.next;
-        while (nameToken && nameToken.kind !== TokenKind.NAME)
-          nameToken = nameToken.next;
-
         let equalsToken: Maybe<Token>;
         if (!isEmpty(node.types)) {
-          equalsToken = nameToken?.next;
+          equalsToken = node.name.l?.endToken.next;
           while (equalsToken && equalsToken.kind !== TokenKind.EQUALS)
             equalsToken = equalsToken.next;
         }
 
         const comments = [
           ...getComments(keywordToken),
-          ...getComments(nameToken),
+          ...getComments(node.name.l?.endToken),
         ];
-        return [
-          ...printDescription(node.description, comments),
-          ...comments,
-          text("union "),
-          ...node.name,
-          ...withSpace(join(node.directives || [], [SPACE])),
-          ...printNamedTypeSet(
-            node.types,
-            node.kind as unknown as NamedTypeSetKinds,
-            equalsToken,
-            loc?.endToken
-          ),
-        ];
+        return {
+          p: [
+            ...printDescription(node.description, comments),
+            ...comments,
+            text("union "),
+            ...node.name.p,
+            ...withSpace(join(node.directives || [], [SPACE])),
+            ...printDelimitedList(
+              node.types,
+              node.kind as unknown as DelimitedListKinds,
+              equalsToken
+            ),
+          ],
+          l,
+        };
       },
     },
     UnionTypeExtension: {
       leave(node) {
-        const loc = node.loc as Location;
+        const l = node.loc as Location;
 
-        const extendToken = loc?.startToken;
-
-        let keywordToken: Maybe<Token> = extendToken?.next;
+        let keywordToken: Maybe<Token> = l?.startToken.next;
         while (keywordToken && keywordToken.kind !== TokenKind.NAME)
           keywordToken = keywordToken.next;
 
-        let nameToken = keywordToken?.next;
-        while (nameToken && nameToken.kind !== TokenKind.NAME)
-          nameToken = nameToken.next;
-
         let equalsToken: Maybe<Token>;
         if (!isEmpty(node.types)) {
-          equalsToken = nameToken?.next;
+          equalsToken = node.name.l?.endToken.next;
           while (equalsToken && equalsToken.kind !== TokenKind.EQUALS)
             equalsToken = equalsToken.next;
         }
 
-        return [
-          ...getComments(extendToken),
-          ...getComments(keywordToken),
-          ...getComments(nameToken),
-          text("extend union "),
-          ...node.name,
-          ...withSpace(join(node.directives || [], [SPACE])),
-          ...printNamedTypeSet(
-            node.types,
-            node.kind as unknown as NamedTypeSetKinds,
-            equalsToken,
-            loc?.endToken
-          ),
-        ];
+        return {
+          p: [
+            ...getComments(l?.startToken),
+            ...getComments(keywordToken),
+            ...getComments(node.name.l?.endToken),
+            text("extend union "),
+            ...node.name.p,
+            ...withSpace(join(node.directives || [], [SPACE])),
+            ...printDelimitedList(
+              node.types,
+              node.kind as unknown as DelimitedListKinds,
+              equalsToken
+            ),
+          ],
+          l,
+        };
       },
     },
     Variable: {
       leave(node) {
-        return [
-          ...getComments((node.loc as Location)?.startToken),
-          ...getComments((node.loc as Location)?.endToken),
-          text("$"),
-          ...node.name,
-        ];
+        const l = node.loc as Location;
+        return {
+          p: [
+            ...getComments(l?.startToken),
+            ...getComments(l?.endToken),
+            text("$"),
+            ...node.name.p,
+          ],
+          l,
+        };
       },
     },
     VariableDefinition: {
       leave(node) {
-        let colonToken = (node.loc as Location)?.startToken.next;
+        const l = node.loc as Location;
+
+        let colonToken = l?.startToken.next;
         while (colonToken && colonToken.kind !== TokenKind.COLON)
           colonToken = colonToken.next;
 
-        const { comments, rest } = filterComments(node.variable);
+        const { comments, rest } = filterComments(node.variable.p);
 
-        return [
-          ...comments,
-          ...getComments(colonToken),
-          ...rest,
-          text(":"),
-          SPACE,
-          ...node.type,
-          ...printDefaultValue(node.defaultValue, colonToken?.next),
-          ...withSpace(join(node.directives || [], [SPACE])),
-        ];
+        return {
+          p: [
+            ...comments,
+            ...getComments(colonToken),
+            ...rest,
+            text(":"),
+            SPACE,
+            ...node.type.p,
+            ...printDefaultValue(node.defaultValue),
+            ...withSpace(join(node.directives || [], [SPACE])),
+          ],
+          l,
+        };
       },
     },
   });
 
-  const resolveComments = list.reduce<(Text | SoftLine | HardLine)[]>(
+  const resolveComments = list.p.reduce<(Text | SoftLine | HardLine)[]>(
     (acc, item) => {
       switch (item.type) {
         case "block_comment":
@@ -1599,11 +1342,14 @@ function printAST(
               else if (type === "soft_line") acc[acc.length - 1] = hardLine();
             }
             acc.push(
-              ...join<Text, HardLine>(
+              ...join(
                 item.token.value
                   .trim()
                   .split("\n")
-                  .map((line) => [text("#"), SPACE, text(line)]),
+                  .map((line) => ({
+                    p: [text("#"), SPACE, text(line)],
+                    l: undefined,
+                  })),
                 [hardLine()]
               )
             );
@@ -1697,27 +1443,28 @@ function filterComments(tokens: PrintToken[]) {
   );
 }
 
+// TODO: rename to `hasItems` and change assertion to `list is [T, ...T[]]`
 function isEmpty<T>(list: Maybe<readonly T[]>): list is null | undefined {
   return !list || list.length === 0;
 }
 
-function join<T extends PrintToken, S extends PrintToken>(
-  list: readonly T[] | readonly T[][],
+function join<T extends TransformedNode, S extends PrintToken>(
+  list: readonly T[],
   delimiter: S[]
 ) {
-  const joined: (S | T)[] = [];
+  const joined: (S | T["p"][number])[] = [];
   for (let i = 0; i < list.length; i++) {
     if (i > 0) joined.push(...delimiter);
     const item = list[i];
-    joined.push(...(Array.isArray(item) ? item : [item]));
+    joined.push(...item.p);
   }
   return joined;
 }
 
-function hasHardLine(list: readonly PrintToken[][]) {
+function hasHardLine(list: readonly TransformedNode[]) {
   for (let i = 0; i < list.length; i++)
-    for (let j = 0; j < list[i].length; j++) {
-      const item = list[i][j];
+    for (let j = 0; j < list[i].p.length; j++) {
+      const item = list[i].p[j];
       if (
         item.type === "hard_line" ||
         item.type === "block_comment" ||
