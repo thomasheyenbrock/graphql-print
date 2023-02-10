@@ -1,5 +1,5 @@
 import { Event, Suite } from "benchmark";
-import { parse } from "graphql";
+import { parse, print } from "graphql";
 import { execSync } from "node:child_process";
 import { readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -25,8 +25,8 @@ const { print: printNew } = require(join(__dirname, "../src/index-new"));
 
 const prettyWithoutComments = new Suite("pretty without comments");
 prettyWithoutComments
-  .add("old", () => printOld(KITCHEN_SINK))
-  .add("new", () => printNew(KITCHEN_SINK))
+  .add("pretty without comments x old", () => printOld(KITCHEN_SINK))
+  .add("pretty without comments x new", () => printNew(KITCHEN_SINK))
   .on("cycle", (event: Event) => {
     console.log(String(event.target));
   })
@@ -39,8 +39,12 @@ prettyWithoutComments
 
 const prettyWithComments = new Suite("pretty with comments");
 prettyWithComments
-  .add("old", () => printOld(KITCHEN_SINK, { preserveComments: true }))
-  .add("new", () => printNew(KITCHEN_SINK, { preserveComments: true }))
+  .add("pretty with comments x old", () =>
+    printOld(KITCHEN_SINK, { preserveComments: true })
+  )
+  .add("pretty with comments x new", () =>
+    printNew(KITCHEN_SINK, { preserveComments: true })
+  )
   .on("cycle", (event: Event) => {
     console.log(String(event.target));
   })
@@ -53,8 +57,12 @@ prettyWithComments
 
 const minifiedWithoutComments = new Suite("minified without comments");
 minifiedWithoutComments
-  .add("old", () => printOld(KITCHEN_SINK, { minified: true }))
-  .add("new", () => printNew(KITCHEN_SINK, { minified: true }))
+  .add("minified without comments x old", () =>
+    printOld(KITCHEN_SINK, { minified: true })
+  )
+  .add("minified without comments x new", () =>
+    printNew(KITCHEN_SINK, { minified: true })
+  )
   .on("cycle", (event: Event) => {
     console.log(String(event.target));
   })
@@ -67,10 +75,10 @@ minifiedWithoutComments
 
 const minifiedWithComments = new Suite("minified with comments");
 minifiedWithComments
-  .add("old", () =>
+  .add("minified with comments x old", () =>
     printOld(KITCHEN_SINK, { minified: true, preserveComments: true })
   )
-  .add("new", () =>
+  .add("minified with comments x new", () =>
     printNew(KITCHEN_SINK, { minified: true, preserveComments: true })
   )
   .on("cycle", (event: Event) => {
@@ -80,6 +88,18 @@ minifiedWithComments
     console.log(
       minifiedWithComments.filter("fastest").map("name") + " is faster\n"
     );
+  })
+  .run();
+
+const graphqljs = new Suite("graphql-js");
+graphqljs
+  .add("graphql-js   ", () => print(KITCHEN_SINK))
+  .add("graphql-print", () => printNew(KITCHEN_SINK))
+  .on("cycle", (event: Event) => {
+    console.log(String(event.target));
+  })
+  .on("complete", () => {
+    console.log(graphqljs.filter("fastest").map("name") + " is faster\n");
   })
   .run();
 
