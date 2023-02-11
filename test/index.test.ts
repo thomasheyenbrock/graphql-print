@@ -1,10 +1,14 @@
 import { readFileSync } from "fs";
 import {
+  ArgumentNode,
   BooleanValueNode,
   DirectiveDefinitionNode,
+  DirectiveNode,
   EnumTypeDefinitionNode,
   EnumTypeExtensionNode,
+  EnumValueDefinitionNode,
   EnumValueNode,
+  FieldDefinitionNode,
   FieldNode,
   FloatValueNode,
   FragmentDefinitionNode,
@@ -12,6 +16,7 @@ import {
   InlineFragmentNode,
   InputObjectTypeDefinitionNode,
   InputObjectTypeExtensionNode,
+  InputValueDefinitionNode,
   InterfaceTypeDefinitionNode,
   InterfaceTypeExtensionNode,
   IntValueNode,
@@ -32,6 +37,7 @@ import {
   StringValueNode,
   UnionTypeDefinitionNode,
   UnionTypeExtensionNode,
+  VariableDefinitionNode,
   VariableNode,
 } from "graphql";
 import { join } from "path";
@@ -271,9 +277,11 @@ describe("Argument", () => {
     }
   `;
   const node = (
-    (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
-      .selections[0] as FieldNode
-  ).arguments![0];
+    (
+      (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
+        .selections[0] as FieldNode
+    ).arguments as ArgumentNode[]
+  )[0];
   it("prints standard without comments", () => {
     expect(print(node)).toMatchInlineSnapshot(`
       "myArg: \\"my string\\"
@@ -317,9 +325,11 @@ describe("BooleanValue", () => {
     }
   `;
   const node = (
-    (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
-      .selections[0] as FieldNode
-  ).arguments![0].value as BooleanValueNode;
+    (
+      (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
+        .selections[0] as FieldNode
+    ).arguments as ArgumentNode[]
+  )[0].value as BooleanValueNode;
   it("prints pretty without comments", () => {
     expect(print(node)).toMatchInlineSnapshot(`
       "true
@@ -364,8 +374,10 @@ describe("Directive", () => {
         myField
       }
     `;
-    const node = (parse(q).definitions[0] as OperationDefinitionNode)
-      .directives![0];
+    const node = (
+      (parse(q).definitions[0] as OperationDefinitionNode)
+        .directives as DirectiveNode[]
+    )[0];
     it("prints pretty without comments", () => {
       expect(print(node)).toMatchInlineSnapshot(`
         "@myDirective(myArg: \\"my string\\")
@@ -417,8 +429,10 @@ describe("Directive", () => {
         myField
       }
     `;
-    const node = (parse(q).definitions[0] as OperationDefinitionNode)
-      .directives![0];
+    const node = (
+      (parse(q).definitions[0] as OperationDefinitionNode)
+        .directives as DirectiveNode[]
+    )[0];
     it("prints pretty", () => {
       expect(print(node)).toMatchInlineSnapshot(`
         "@myDirective(
@@ -929,9 +943,11 @@ describe("EnumValue", () => {
     }
   `;
   const node = (
-    (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
-      .selections[0] as FieldNode
-  ).arguments![0].value as EnumValueNode;
+    (
+      (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
+        .selections[0] as FieldNode
+    ).arguments as ArgumentNode[]
+  )[0].value as EnumValueNode;
   it("prints pretty without comments", () => {
     expect(print(node)).toMatchInlineSnapshot(`
       "MY_ENUM_VALUE
@@ -974,7 +990,10 @@ describe("EnumValueDefinitionNode", () => {
       @myOtherDirective # inline comment 4
     }
   `;
-  const node = (parse(q).definitions[0] as EnumTypeDefinitionNode).values![0];
+  const node = (
+    (parse(q).definitions[0] as EnumTypeDefinitionNode)
+      .values as EnumValueDefinitionNode[]
+  )[0];
   it("prints pretty without comments", () => {
     expect(print(node)).toMatchInlineSnapshot(`
       "\\"my description\\"
@@ -1165,7 +1184,10 @@ describe("FieldDefinition", () => {
       @myOtherDirective # inline comment 8
     }
   `;
-  const node = (parse(q).definitions[0] as ObjectTypeDefinitionNode).fields![0];
+  const node = (
+    (parse(q).definitions[0] as ObjectTypeDefinitionNode)
+      .fields as FieldDefinitionNode[]
+  )[0];
   it("prints pretty without comments", () => {
     expect(print(node)).toMatchInlineSnapshot(`
       "\\"my description\\"
@@ -1247,9 +1269,11 @@ describe("FloatValue", () => {
     }
   `;
   const node = (
-    (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
-      .selections[0] as FieldNode
-  ).arguments![0].value as FloatValueNode;
+    (
+      (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
+        .selections[0] as FieldNode
+    ).arguments as ArgumentNode[]
+  )[0].value as FloatValueNode;
   it("prints pretty without comments", () => {
     expect(print(node)).toMatchInlineSnapshot(`
       "42.43e44
@@ -1682,8 +1706,12 @@ describe("InputValueDefinition", () => {
       ): MyType
     }
   `;
-  const node = (parse(q).definitions[0] as ObjectTypeDefinitionNode).fields![0]
-    .arguments![0];
+  const node = (
+    (
+      (parse(q).definitions[0] as ObjectTypeDefinitionNode)
+        .fields as FieldDefinitionNode[]
+    )[0].arguments as InputValueDefinitionNode[]
+  )[0];
   it("prints pretty without comments", () => {
     expect(print(node)).toMatchInlineSnapshot(`
       "\\"my description\\"
@@ -2141,9 +2169,11 @@ describe("IntValue", () => {
     }
   `;
   const node = (
-    (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
-      .selections[0] as FieldNode
-  ).arguments![0].value as IntValueNode;
+    (
+      (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
+        .selections[0] as FieldNode
+    ).arguments as ArgumentNode[]
+  )[0].value as IntValueNode;
   it("prints pretty without comments", () => {
     expect(print(node)).toMatchInlineSnapshot(`
       "42
@@ -2183,8 +2213,10 @@ describe("ListType", () => {
       ] # inline comment 3
     }
   `;
-  const node = (parse(q).definitions[0] as ObjectTypeDefinitionNode).fields![0]
-    .type as ListTypeNode;
+  const node = (
+    (parse(q).definitions[0] as ObjectTypeDefinitionNode)
+      .fields as FieldDefinitionNode[]
+  )[0].type as ListTypeNode;
   it("prints pretty without comments", () => {
     expect(print(node)).toMatchInlineSnapshot(`
       "[MyType]
@@ -2233,9 +2265,11 @@ describe("ListValue", () => {
       }
     `;
     const node = (
-      (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
-        .selections[0] as FieldNode
-    ).arguments![0].value as ListValueNode;
+      (
+        (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
+          .selections[0] as FieldNode
+      ).arguments as ArgumentNode[]
+    )[0].value as ListValueNode;
     it("prints pretty without comments", () => {
       expect(print(node)).toMatchInlineSnapshot(`
         "[]
@@ -2282,9 +2316,11 @@ describe("ListValue", () => {
       }
     `;
     const node = (
-      (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
-        .selections[0] as FieldNode
-    ).arguments![0].value as ListValueNode;
+      (
+        (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
+          .selections[0] as FieldNode
+      ).arguments as ArgumentNode[]
+    )[0].value as ListValueNode;
     it("prints pretty without comments", () => {
       expect(print(node)).toMatchInlineSnapshot(`
         "[42, 43]
@@ -2364,8 +2400,10 @@ describe("NamedTypeNode", () => {
       MyType # inline comment
     }
   `;
-  const node = (parse(q).definitions[0] as ObjectTypeDefinitionNode).fields![0]
-    .type as NamedTypeNode;
+  const node = (
+    (parse(q).definitions[0] as ObjectTypeDefinitionNode)
+      .fields as FieldDefinitionNode[]
+  )[0].type as NamedTypeNode;
   it("prints pretty without comments", () => {
     expect(print(node)).toMatchInlineSnapshot(`
       "MyType
@@ -2403,8 +2441,10 @@ describe("NonNullType", () => {
       ! # inline comment 2
     }
   `;
-  const node = (parse(q).definitions[0] as ObjectTypeDefinitionNode).fields![0]
-    .type as NonNullTypeNode;
+  const node = (
+    (parse(q).definitions[0] as ObjectTypeDefinitionNode)
+      .fields as FieldDefinitionNode[]
+  )[0].type as NonNullTypeNode;
   it("prints pretty without comments", () => {
     expect(print(node)).toMatchInlineSnapshot(`
       "MyType!
@@ -2446,9 +2486,11 @@ describe("NullValue", () => {
     }
   `;
   const node = (
-    (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
-      .selections[0] as FieldNode
-  ).arguments![0].value as NullValueNode;
+    (
+      (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
+        .selections[0] as FieldNode
+    ).arguments as ArgumentNode[]
+  )[0].value as NullValueNode;
   it("prints pretty without comments", () => {
     expect(print(node)).toMatchInlineSnapshot(`
       "null
@@ -2491,9 +2533,11 @@ describe("ObjectField", () => {
   `;
   const node = (
     (
-      (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
-        .selections[0] as FieldNode
-    ).arguments![0].value as ObjectValueNode
+      (
+        (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
+          .selections[0] as FieldNode
+      ).arguments as ArgumentNode[]
+    )[0].value as ObjectValueNode
   ).fields[0];
   it("prints pretty without comments", () => {
     expect(print(node)).toMatchInlineSnapshot(`
@@ -2926,9 +2970,11 @@ describe("ObjectValue", () => {
       }
     `;
     const node = (
-      (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
-        .selections[0] as FieldNode
-    ).arguments![0].value as ObjectValueNode;
+      (
+        (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
+          .selections[0] as FieldNode
+      ).arguments as ArgumentNode[]
+    )[0].value as ObjectValueNode;
     it("prints pretty without comments", () => {
       expect(print(node)).toMatchInlineSnapshot(`
         "{}
@@ -2975,9 +3021,11 @@ describe("ObjectValue", () => {
       }
     `;
     const node = (
-      (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
-        .selections[0] as FieldNode
-    ).arguments![0].value as ObjectValueNode;
+      (
+        (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
+          .selections[0] as FieldNode
+      ).arguments as ArgumentNode[]
+    )[0].value as ObjectValueNode;
     it("prints pretty without comments", () => {
       expect(print(node)).toMatchInlineSnapshot(`
         "{ myFieldName1: 42, myFieldName2: \\"my string\\" }
@@ -3021,9 +3069,11 @@ describe("ObjectValue", () => {
       }
     `;
     const node = (
-      (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
-        .selections[0] as FieldNode
-    ).arguments![0].value as ObjectValueNode;
+      (
+        (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
+          .selections[0] as FieldNode
+      ).arguments as ArgumentNode[]
+    )[0].value as ObjectValueNode;
     it("prints pretty", () => {
       expect(print(node)).toMatchInlineSnapshot(`
         "{
@@ -3637,9 +3687,11 @@ describe("StringValue", () => {
       }
     `;
     const node = (
-      (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
-        .selections[0] as FieldNode
-    ).arguments![0].value as StringValueNode;
+      (
+        (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
+          .selections[0] as FieldNode
+      ).arguments as ArgumentNode[]
+    )[0].value as StringValueNode;
     it("prints pretty without comments", () => {
       expect(print(node)).toMatchInlineSnapshot(`
         "\\"my string\\"
@@ -3678,9 +3730,11 @@ describe("StringValue", () => {
       }
     `;
     const node = (
-      (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
-        .selections[0] as FieldNode
-    ).arguments![0].value as StringValueNode;
+      (
+        (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
+          .selections[0] as FieldNode
+      ).arguments as ArgumentNode[]
+    )[0].value as StringValueNode;
     it("prints pretty without comments", () => {
       expect(print(node)).toMatchInlineSnapshot(`
         "\\"\\"\\"my \\\\\\"\\"\\" string\\"\\"\\"
@@ -3721,9 +3775,11 @@ describe("StringValue", () => {
       }
     `;
     const node = (
-      (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
-        .selections[0] as FieldNode
-    ).arguments![0].value as StringValueNode;
+      (
+        (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
+          .selections[0] as FieldNode
+      ).arguments as ArgumentNode[]
+    )[0].value as StringValueNode;
     it("prints pretty without comments", () => {
       expect(print(node)).toMatchInlineSnapshot(`
         "\\"\\"\\"
@@ -4117,9 +4173,11 @@ describe("Variable", () => {
     }
   `;
   const node = (
-    (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
-      .selections[0] as FieldNode
-  ).arguments![0].value as VariableNode;
+    (
+      (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
+        .selections[0] as FieldNode
+    ).arguments as ArgumentNode[]
+  )[0].value as VariableNode;
   it("prints pretty without comments", () => {
     expect(print(node)).toMatchInlineSnapshot(`
       "$myVariable
@@ -4174,8 +4232,10 @@ describe("VariableDefinition", () => {
       myField
     }
   `;
-  const node = (parse(q).definitions[0] as OperationDefinitionNode)
-    .variableDefinitions![0];
+  const node = (
+    (parse(q).definitions[0] as OperationDefinitionNode)
+      .variableDefinitions as VariableDefinitionNode[]
+  )[0];
   it("prints pretty without comments", () => {
     expect(print(node)).toMatchInlineSnapshot(`
       "$myVariable: MyType = 42 @myDirective @myOtherDirective

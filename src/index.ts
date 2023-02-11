@@ -1,4 +1,3 @@
-// TODO: enforce explicit return types
 import {
   ASTNode,
   Kind,
@@ -68,7 +67,10 @@ type PrintOptions = {
   minified?: boolean;
 };
 
-export function print(node: ASTNode | ASTNode[], options: PrintOptions = {}) {
+export function print(
+  node: ASTNode | ASTNode[],
+  options: PrintOptions = {}
+): string {
   return (Array.isArray(node) ? node : [node])
     .map((node) => printAST(node, options))
     .join("\n");
@@ -85,7 +87,7 @@ function printAST(
 ): string {
   const SPACE: Text = { type: "text", value: minified ? "" : " " };
 
-  function getComments(token: Maybe<Token>) {
+  function getComments(token: Maybe<Token>): Comment[] {
     if (!preserveComments || !token) return [];
 
     const comments: Comment[] = [];
@@ -110,8 +112,8 @@ function printAST(
     [open, close]: readonly [TokenKind, TokenKind],
     spacer: Text[],
     delimiter: Text[],
-    forceMultiLine: boolean = false
-  ) {
+    forceMultiLine = false
+  ): PrintToken[] {
     const openingBracket = getComments(prev(list[0].l?.startToken, open));
     const closingBracket = getComments(
       next(list[list.length - 1].l?.endToken, close)
@@ -138,7 +140,9 @@ function printAST(
     ];
   }
 
-  function printArgumentSet(args: Maybe<readonly TransformedNode[]>) {
+  function printArgumentSet(
+    args: Maybe<readonly TransformedNode[]>
+  ): PrintToken[] {
     if (isEmpty(args)) return [];
     return printWrappedListWithComments(args, PARENS, [], [text(","), SPACE]);
   }
@@ -146,7 +150,7 @@ function printAST(
   function printInputValueDefinitionSet(
     inputValueDefinitions: Maybe<readonly TransformedNode[]>,
     parentKind: Kind
-  ) {
+  ): PrintToken[] {
     if (isEmpty(inputValueDefinitions)) return [];
 
     const [openAndClose, forceMultiline] =
@@ -166,7 +170,7 @@ function printAST(
 
   function printOperationTypeDefinitionSet(
     operationTypes: Maybe<readonly TransformedNode[]>
-  ) {
+  ): PrintToken[] {
     if (isEmpty(operationTypes)) return [];
     return printWrappedListWithComments(
       operationTypes,
@@ -179,7 +183,7 @@ function printAST(
 
   function printEnumValueDefinitionSet(
     definitions: Maybe<readonly TransformedNode[]>
-  ) {
+  ): PrintToken[] {
     if (isEmpty(definitions)) return [];
     return printWrappedListWithComments(
       definitions,
@@ -190,7 +194,9 @@ function printAST(
     );
   }
 
-  function printFieldDefinitionSet(fields: Maybe<readonly TransformedNode[]>) {
+  function printFieldDefinitionSet(
+    fields: Maybe<readonly TransformedNode[]>
+  ): PrintToken[] {
     if (isEmpty(fields)) return [];
     return printWrappedListWithComments(fields, BRACES, [], [text(",")], true);
   }
@@ -199,7 +205,7 @@ function printAST(
     items: Maybe<readonly TransformedNode[]>,
     parentKind: DelimitedListKinds,
     initializerToken: Maybe<Token>
-  ) {
+  ): PrintToken[] {
     if (isEmpty(items)) return [];
 
     const [initializer, wrapInitializer, delimiterKind] =
@@ -267,14 +273,14 @@ function printAST(
     return itemList;
   }
 
-  function withSpace(list: Maybe<PrintToken[]>) {
+  function withSpace(list: Maybe<PrintToken[]>): PrintToken[] {
     return isEmpty(list) ? [] : [SPACE, ...list];
   }
 
   function printDescription(
     description: Maybe<TransformedNode>,
     comments: Comment[]
-  ) {
+  ): PrintToken[] {
     return description
       ? [
           ...description.p,
@@ -285,7 +291,7 @@ function printAST(
       : [];
   }
 
-  function printDefaultValue(node: Maybe<TransformedNode>) {
+  function printDefaultValue(node: Maybe<TransformedNode>): PrintToken[] {
     if (!node) return [];
 
     const { comments, rest } = filterComments(node.p);
@@ -1221,12 +1227,12 @@ function printAST(
   let currentLine: (Text | SoftLine)[] = [];
   let indentation = "";
 
-  function handleIndentation(i?: Indentation) {
+  function handleIndentation(i?: Indentation): void {
     if (i === "+") indentation += indentationStep;
     if (i === "-") indentation = indentation.slice(indentationStep.length);
   }
 
-  function printLine(list: (Text | SoftLine)[], breakLines: boolean) {
+  function printLine(list: (Text | SoftLine)[], breakLines: boolean): string {
     let printed = "";
     for (let i = 0; i < list.length; i++) {
       const item = list[i];
@@ -1249,7 +1255,7 @@ function printAST(
     return printed.trimEnd();
   }
 
-  function printCurrentLine() {
+  function printCurrentLine(): void {
     const printedLine = indentation + printLine(currentLine, false);
     if (minified || printedLine.length <= maxLineLength) {
       printed += printedLine;
@@ -1274,11 +1280,13 @@ function printAST(
   return printed.replace(/^\n*/, "").replace(/\n*$/, minified ? "" : "\n");
 }
 
-function filterComments(tokens: PrintToken[]) {
-  return tokens.reduce<{
-    comments: Comment[];
-    rest: (Text | SoftLine | HardLine)[];
-  }>(
+type FilteredComments = {
+  comments: Comment[];
+  rest: (Text | SoftLine | HardLine)[];
+};
+
+function filterComments(tokens: PrintToken[]): FilteredComments {
+  return tokens.reduce<FilteredComments>(
     (acc, printToken) => {
       switch (printToken.type) {
         case "block_comment":
@@ -1295,12 +1303,16 @@ function filterComments(tokens: PrintToken[]) {
   );
 }
 
-function prev(token: Maybe<Token>, kind: TokenKind) {
+function prev(token: Maybe<Token>, kind: TokenKind): Maybe<Token> {
   while (token && token.kind !== kind) token = token.prev;
   return token;
 }
 
-function next(token: Maybe<Token>, kind: TokenKind, value?: string) {
+function next(
+  token: Maybe<Token>,
+  kind: TokenKind,
+  value?: string
+): Maybe<Token> {
   while (
     token &&
     !(token.kind === kind && (value ? token.value === value : true))
@@ -1316,7 +1328,7 @@ function isEmpty<T>(list: Maybe<readonly T[]>): list is null | undefined {
 function join<T extends TransformedNode, S extends PrintToken>(
   list: readonly T[],
   delimiter: S[]
-) {
+): (S | T["p"][number])[] {
   const joined: (S | T["p"][number])[] = [];
   for (let i = 0; i < list.length; i++) {
     if (i > 0) joined.push(...delimiter);
@@ -1326,7 +1338,7 @@ function join<T extends TransformedNode, S extends PrintToken>(
   return joined;
 }
 
-function hasHardLine(list: readonly TransformedNode[]) {
+function hasHardLine(list: readonly TransformedNode[]): boolean {
   for (let i = 0; i < list.length; i++)
     for (let j = 0; j < list[i].p.length; j++) {
       const item = list[i].p[j];

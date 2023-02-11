@@ -11,6 +11,7 @@
   "scripts": {
     "benchmark": "node test/benchmark.mjs",
     "build": "tsup src/index.ts --format esm,cjs --dts --minify --external graphql",
+    "check": "eslint --max-warnings 0 . && prettier --check '**/*.{js,ts,json,md}' && vitest run",
     "format": "prettier --write '**/*.{js,ts,json,md}'",
     "test": "vitest"
   },
@@ -19,7 +20,10 @@
   },
   "devDependencies": {
     "@types/benchmark": "^2.1.2",
+    "@typescript-eslint/eslint-plugin": "^5.51.0",
+    "@typescript-eslint/parser": "^5.51.0",
     "benchmark": "^2.1.4",
+    "eslint": "^8.34.0",
     "prettier": "^2.8.4",
     "tsup": "^6.5.0",
     "typescript": "^4.9.5",
