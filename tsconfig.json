@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
+    "importsNotUsedAsValues": "error",
     "moduleResolution": "node",
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "strict": true
   }
 }
