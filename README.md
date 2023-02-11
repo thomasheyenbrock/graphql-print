@@ -2,6 +2,14 @@
 
 The printer that GraphQL always deserved.
 
+✅ Pretty and minified printing
+
+✅ Print comments
+
+✅ Configure line length
+
+✅ Choose custom indentation
+
 ## Install
 
 Note that `graphql` is a peer dependency of this package and needs to be installed as well.

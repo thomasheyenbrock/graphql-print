@@ -1,7 +1,24 @@
 {
   "name": "graphql-print",
   "version": "0.0.0",
+  "description": "Print any GraphQL AST node, pretty or minified, with or without comments",
+  "keywords": [
+    "graphql",
+    "print",
+    "prettify",
+    "format",
+    "minify"
+  ],
+  "author": "Thomas Heyenbrock<thomas.heyenbrock@gmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thomasheyenbrock/graphql-print"
+  },
+  "homepage": "https://github.com/thomasheyenbrock/graphql-print#readme",
+  "bugs": {
+    "url": "https://github.com/thomasheyenbrock/graphql-print/issues"
+  },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
