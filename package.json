@@ -13,6 +13,7 @@
     "build": "tsup src/index.ts --format esm,cjs --dts --minify --external graphql",
     "check": "eslint --max-warnings 0 . && prettier --check '**/*.{js,ts,json,md}' && ALL_GRAPHQL_VERSIONS=true vitest run",
     "format": "prettier --write '**/*.{js,ts,json,md}'",
+    "prepublish": "pnpm build && pnpm check",
     "test": "vitest"
   },
   "peerDependencies": {
