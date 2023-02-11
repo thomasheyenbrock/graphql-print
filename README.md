@@ -37,14 +37,48 @@ By default, the printer outputs a pretty-printed version of the given AST nodes,
 import { parse } from "graphql";
 import { print } from "graphql-print";
 
-const ast = parse("query MyQuery { myField(myArg: 42, myOtherArg: null)}");
-console.log(print(ast));
+const ast = parse(`
+  query MyQuery { 
+    # select a field
+    myField(myArg: 42, myOtherArg: null)
+  }
+`);
 
+console.log(print(ast));
 /**
  * Will print the following:
  *
  * query MyQuery {
  *   myField(myArg: 42, myOtherArg: null)
+ * }
+ */
+
+console.log(print(ast, { minified: true }));
+/**
+ * Will print the following:
+ *
+ * query MyQuery{myField(myArg:42,myOtherArg:null)}
+ */
+
+console.log(print(ast, { preserveComments: true }));
+/**
+ * Will print the following:
+ *
+ * query MyQuery {
+ *   # select a field
+ *   myField(myArg: 42, myOtherArg: null)
+ * }
+ */
+
+console.log(print(ast, { maxLineLength: 20 }));
+/**
+ * Will print the following:
+ *
+ * query MyQuery {
+ *   myField(
+ *     myArg: 42
+ *     myOtherArg: null
+ *   )
  * }
  */
 ```
