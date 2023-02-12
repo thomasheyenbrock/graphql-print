@@ -1235,7 +1235,8 @@ function printAST(
     currentLine = [];
   }
 
-  for (const item of resolveComments) {
+  for (let i = 0; i < resolveComments.length; i++) {
+    const item = resolveComments[i];
     if (item.type === "hard_line") {
       printCurrentLine();
       handleIndentation(item.indentation);
