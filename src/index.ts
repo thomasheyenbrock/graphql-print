@@ -18,8 +18,8 @@ type Text = { type: "text"; value: string };
 
 type SoftLine = {
   type: "soft_line";
-  alt: Text[];
-  prefix: Text[];
+  alt: string;
+  prefix: string;
   indentation?: Indentation;
 };
 
@@ -36,8 +36,8 @@ function text(value: string): Text {
 }
 
 function softLine(
-  alt: Text[],
-  prefix: Text[] = [],
+  alt: string,
+  prefix = "",
   indentation?: Indentation
 ): SoftLine {
   return { type: "soft_line", alt, prefix, indentation };
@@ -110,8 +110,8 @@ function printAST(
   function printWrappedListWithComments(
     list: readonly TransformedNode[],
     [open, close]: readonly [TokenKind, TokenKind],
-    spacer: Text[],
-    delimiter: Text[],
+    spacer: string,
+    delimiter: string,
     forceMultiLine = false
   ): PrintToken[] {
     const openingBracket = getComments(prev(list[0].l?.startToken, open));
@@ -130,11 +130,7 @@ function printAST(
       ...join(list, [shouldPrintMultiLine ? hardLine() : softLine(delimiter)]),
       shouldPrintMultiLine
         ? hardLine("-")
-        : softLine(
-            closingBracket.length > 0 ? [text("\n")] : spacer,
-            undefined,
-            "-"
-          ),
+        : softLine(closingBracket.length > 0 ? "\n" : spacer, undefined, "-"),
       ...closingBracket,
       text(close),
     ];
@@ -144,7 +140,7 @@ function printAST(
     args: Maybe<readonly TransformedNode[]>
   ): PrintToken[] {
     if (isEmpty(args)) return [];
-    return printWrappedListWithComments(args, PARENS, [], [text(","), SPACE]);
+    return printWrappedListWithComments(args, PARENS, "", "," + SPACE.value);
   }
 
   function printInputValueDefinitionSet(
@@ -162,8 +158,8 @@ function printAST(
     return printWrappedListWithComments(
       inputValueDefinitions,
       openAndClose,
-      [],
-      [text(",")],
+      "",
+      ",",
       forceMultiline
     );
   }
@@ -172,33 +168,21 @@ function printAST(
     operationTypes: Maybe<readonly TransformedNode[]>
   ): PrintToken[] {
     if (isEmpty(operationTypes)) return [];
-    return printWrappedListWithComments(
-      operationTypes,
-      BRACES,
-      [],
-      [text(",")],
-      true
-    );
+    return printWrappedListWithComments(operationTypes, BRACES, "", ",", true);
   }
 
   function printEnumValueDefinitionSet(
     definitions: Maybe<readonly TransformedNode[]>
   ): PrintToken[] {
     if (isEmpty(definitions)) return [];
-    return printWrappedListWithComments(
-      definitions,
-      BRACES,
-      [],
-      [text(",")],
-      true
-    );
+    return printWrappedListWithComments(definitions, BRACES, "", ",", true);
   }
 
   function printFieldDefinitionSet(
     fields: Maybe<readonly TransformedNode[]>
   ): PrintToken[] {
     if (isEmpty(fields)) return [];
-    return printWrappedListWithComments(fields, BRACES, [], [text(",")], true);
+    return printWrappedListWithComments(fields, BRACES, "", ",", true);
   }
 
   function printDelimitedList(
@@ -262,9 +246,10 @@ function printAST(
         if (hasComments) itemList.push(text(delimiterKind + " "));
         else
           itemList.push(
-            softLine(i === 0 ? [] : [text(" " + delimiterKind + " ")], [
-              text(delimiterKind + " "),
-            ])
+            softLine(
+              i === 0 ? "" : " " + delimiterKind + " ",
+              delimiterKind + " "
+            )
           );
       }
 
@@ -775,8 +760,8 @@ function printAST(
             : printWrappedListWithComments(
                 node.values,
                 BRACKETS,
-                [],
-                [text(","), SPACE]
+                "",
+                "," + SPACE.value
               ),
           l,
         };
@@ -893,8 +878,8 @@ function printAST(
             : printWrappedListWithComments(
                 node.fields,
                 BRACES,
-                [SPACE],
-                [text(","), SPACE]
+                SPACE.value,
+                "," + SPACE.value
               ),
           l,
         };
@@ -920,8 +905,8 @@ function printAST(
               : printWrappedListWithComments(
                   node.variableDefinitions,
                   PARENS,
-                  [],
-                  [text(","), SPACE]
+                  "",
+                  "," + SPACE.value
                 )),
             ...withSpace(join(node.directives || [], [SPACE])),
             ...withSpace(node.selectionSet.p),
@@ -1023,8 +1008,8 @@ function printAST(
           p: printWrappedListWithComments(
             node.selections,
             BRACES,
-            [],
-            [text(",")],
+            "",
+            ",",
             true
           ),
           l,
@@ -1228,9 +1213,9 @@ function printAST(
             printed = printed.trimEnd();
             handleIndentation(item.indentation);
             printed += "\n" + indentation;
-            for (const prefix of item.prefix) printed += prefix.value;
+            printed += item.prefix;
           } else {
-            for (const alt of item.alt) printed += alt.value;
+            printed += item.alt;
           }
           break;
       }
