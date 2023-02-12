@@ -121,7 +121,7 @@ function printAST(
 
     const shouldPrintMultiLine =
       !minified &&
-      (forceMultiLine || hasHardLine(list) || closingBracket.length > 0);
+      (forceMultiLine || closingBracket.length > 0 || hasHardLine(list));
 
     return [
       ...openingBracket,
@@ -203,18 +203,17 @@ function printAST(
 
   function printDelimitedList(
     items: Maybe<readonly TransformedNode[]>,
-    parentKind: DelimitedListKinds,
-    initializerToken: Maybe<Token>
+    parentKind: DelimitedListKinds
   ): PrintToken[] {
     if (isEmpty(items)) return [];
 
-    const [initializer, wrapInitializer, delimiterKind] =
+    const [initializerKind, initializerValue, wrapInitializer, delimiterKind] =
       parentKind === Kind.UNION_TYPE_DEFINITION ||
       parentKind === Kind.UNION_TYPE_EXTENSION
-        ? ["=", SPACE, TokenKind.PIPE]
+        ? [TokenKind.EQUALS, undefined, SPACE, TokenKind.PIPE]
         : parentKind === Kind.DIRECTIVE_DEFINITION
-        ? ["on", text(" "), TokenKind.PIPE]
-        : ["implements", text(" "), TokenKind.AMP];
+        ? [TokenKind.NAME, "on", text(" "), TokenKind.PIPE]
+        : [TokenKind.NAME, "implements", text(" "), TokenKind.AMP];
 
     let hasComments = false;
     const itemsWithComments: { comments: PrintToken[]; type: PrintToken[] }[] =
@@ -246,9 +245,11 @@ function printAST(
       });
     }
 
-    const itemList: PrintToken[] = getComments(initializerToken);
+    const itemList: PrintToken[] = getComments(
+      prev(items[0].l?.startToken.prev, initializerKind, initializerValue)
+    );
     if (itemList.length === 0) itemList.push(wrapInitializer);
-    itemList.push(text(initializer), wrapInitializer);
+    itemList.push(text(initializerValue || initializerKind), wrapInitializer);
 
     for (let i = 0; i < itemsWithComments.length; i++) {
       itemList.push(...itemsWithComments[i].comments);
@@ -357,20 +358,20 @@ function printAST(
 
         const keywordToken: Maybe<Token> = next(l?.startToken, TokenKind.NAME);
         const atToken = next(keywordToken?.next, TokenKind.AT);
-        const onToken = next(atToken?.next, TokenKind.NAME, "on");
 
-        let repeatableToken: Maybe<Token>;
-        if (node.repeatable) {
-          repeatableToken = onToken?.prev;
-          while (repeatableToken && repeatableToken.kind === TokenKind.COMMENT)
-            repeatableToken = repeatableToken.prev;
-        }
-        const repeatableComments = getComments(repeatableToken);
+        const repeatableComments = node.repeatable
+          ? getComments(
+              prev(
+                node.locations[0]?.l?.startToken,
+                TokenKind.NAME,
+                "repeatable"
+              )
+            )
+          : [];
 
         const locations = printDelimitedList(
           node.locations,
-          node.kind as unknown as DelimitedListKinds,
-          onToken
+          node.kind as unknown as DelimitedListKinds
         );
 
         const comments = [
@@ -701,10 +702,7 @@ function printAST(
             ...node.name.p,
             ...printDelimitedList(
               node.interfaces,
-              node.kind as unknown as DelimitedListKinds,
-              isEmpty(node.interfaces)
-                ? null
-                : next(node.name.l?.endToken.next, TokenKind.NAME)
+              node.kind as unknown as DelimitedListKinds
             ),
             ...withSpace(join(node.directives || [], [SPACE])),
             ...withSpace(printFieldDefinitionSet(node.fields)),
@@ -725,10 +723,7 @@ function printAST(
             ...node.name.p,
             ...printDelimitedList(
               node.interfaces,
-              node.kind as unknown as DelimitedListKinds,
-              isEmpty(node.interfaces)
-                ? null
-                : next(node.name.l?.endToken.next, TokenKind.NAME)
+              node.kind as unknown as DelimitedListKinds
             ),
             ...withSpace(join(node.directives || [], [SPACE])),
             ...withSpace(printFieldDefinitionSet(node.fields)),
@@ -854,10 +849,7 @@ function printAST(
             ...node.name.p,
             ...printDelimitedList(
               node.interfaces,
-              node.kind as unknown as DelimitedListKinds,
-              isEmpty(node.interfaces)
-                ? null
-                : next(node.name.l?.endToken.next, TokenKind.NAME)
+              node.kind as unknown as DelimitedListKinds
             ),
             ...withSpace(join(node.directives || [], [SPACE])),
             ...withSpace(printFieldDefinitionSet(node.fields)),
@@ -878,10 +870,7 @@ function printAST(
             ...node.name.p,
             ...printDelimitedList(
               node.interfaces,
-              node.kind as unknown as DelimitedListKinds,
-              isEmpty(node.interfaces)
-                ? null
-                : next(node.name.l?.endToken.next, TokenKind.NAME)
+              node.kind as unknown as DelimitedListKinds
             ),
             ...withSpace(join(node.directives || [], [SPACE])),
             ...withSpace(printFieldDefinitionSet(node.fields)),
@@ -1118,10 +1107,7 @@ function printAST(
             ...withSpace(join(node.directives || [], [SPACE])),
             ...printDelimitedList(
               node.types,
-              node.kind as unknown as DelimitedListKinds,
-              isEmpty(node.types)
-                ? null
-                : next(node.name.l?.endToken.next, TokenKind.EQUALS)
+              node.kind as unknown as DelimitedListKinds
             ),
           ],
           l,
@@ -1141,10 +1127,7 @@ function printAST(
             ...withSpace(join(node.directives || [], [SPACE])),
             ...printDelimitedList(
               node.types,
-              node.kind as unknown as DelimitedListKinds,
-              isEmpty(node.types)
-                ? null
-                : next(node.name.l?.endToken.next, TokenKind.EQUALS)
+              node.kind as unknown as DelimitedListKinds
             ),
           ],
           l,
@@ -1303,8 +1286,16 @@ function filterComments(tokens: PrintToken[]): FilteredComments {
   );
 }
 
-function prev(token: Maybe<Token>, kind: TokenKind): Maybe<Token> {
-  while (token && token.kind !== kind) token = token.prev;
+function prev(
+  token: Maybe<Token>,
+  kind: TokenKind,
+  value?: string
+): Maybe<Token> {
+  while (
+    token &&
+    !(token.kind === kind && (value ? token.value === value : true))
+  )
+    token = token.prev;
   return token;
 }
 
