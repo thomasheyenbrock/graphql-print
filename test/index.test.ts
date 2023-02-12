@@ -482,6 +482,39 @@ describe.each(
         );
       });
     });
+    describe("arguments with comments", () => {
+      const q = `
+      query @myDirective(
+        myArg1: "my string"
+        # comment
+        myArg2: 42
+      ) {
+        myField
+      }
+    `;
+      const node = (
+        (parse(q).definitions[0] as OperationDefinitionNode)
+          .directives as DirectiveNode[]
+      )[0];
+      it("prints pretty", () => {
+        expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
+          "@myDirective(
+            myArg1: \\"my string\\"
+            # comment
+            myArg2: 42
+          )
+          "
+        `);
+      });
+      it("prints minified", () => {
+        expect(print(node, { minified: true, preserveComments: true }))
+          .toMatchInlineSnapshot(`
+            "@myDirective(myArg1:\\"my string\\"
+            #comment
+            myArg2:42)"
+          `);
+      });
+    });
   });
 
   describe("DirectiveDefinition", () => {
@@ -745,6 +778,34 @@ describe.each(
           #inline comment 10
           |MUTATION|SUBSCRIPTION"
         `);
+      });
+    });
+    describe("input value definitions with comments", () => {
+      const q = `
+      directive @myDirective (
+        myArg1: MyInputType1
+        # comment
+        myArg2: MyInputType1
+      ) on QUERY
+    `;
+      const node = parse(q).definitions[0] as DirectiveDefinitionNode;
+      it("prints pretty", () => {
+        expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
+          "directive @myDirective(
+            myArg1: MyInputType1
+            # comment
+            myArg2: MyInputType1
+          ) on QUERY
+          "
+        `);
+      });
+      it("prints minified", () => {
+        expect(print(node, { minified: true, preserveComments: true }))
+          .toMatchInlineSnapshot(`
+            "directive@myDirective(myArg1:MyInputType1
+            #comment
+            myArg2:MyInputType1) on QUERY"
+          `);
       });
     });
   });
@@ -1194,102 +1255,168 @@ describe.each(
         );
       });
     });
+    describe("arguments with comments", () => {
+      const q = `
+      {
+        myField(
+          myArg1: 42
+          # comment
+          myArg2: "my string"
+        )
+      }
+    `;
+      const node = (parse(q).definitions[0] as OperationDefinitionNode)
+        .selectionSet.selections[0] as FieldNode;
+      it("prints pretty", () => {
+        expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
+          "myField(
+            myArg1: 42
+            # comment
+            myArg2: \\"my string\\"
+          )
+          "
+        `);
+      });
+      it("prints minified", () => {
+        expect(print(node, { minified: true, preserveComments: true }))
+          .toMatchInlineSnapshot(`
+            "myField(myArg1:42
+            #comment
+            myArg2:\\"my string\\")"
+          `);
+      });
+    });
   });
 
   describe("FieldDefinition", () => {
-    const q = `
-    type MyType {
-      # block comment 1
-      "my description" # inline comment 1
-      # block comment 2
-      myField # inline comment 2
-      # block comment 3
-      ( # inline comment 3
-        myArg: MyInputType = 42
-      # block comment 4
-      ) # inline comment 4
-      # block comment 5
-      : # inline comment 5
-      # block comment 6
-      MyOutputType # inline comment 6
-      # block comment 7
-      @myDirective # inline comment 7
-      # block comment 8
-      @myOtherDirective # inline comment 8
-    }
-  `;
-    const node = (
-      (parse(q).definitions[0] as ObjectTypeDefinitionNode)
-        .fields as FieldDefinitionNode[]
-    )[0];
-    it("prints pretty without comments", () => {
-      expect(print(node)).toMatchInlineSnapshot(`
-      "\\"my description\\"
-      myField(myArg: MyInputType = 42): MyOutputType @myDirective @myOtherDirective
-      "
-    `);
-    });
-    it("prints pretty with comments", () => {
-      expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
-      "# block comment 1
-      # inline comment 1
-      \\"my description\\"
-      # block comment 2
-      # inline comment 2
-      # block comment 5
-      # inline comment 5
-      myField
-      # block comment 3
-      # inline comment 3
-      (
-        myArg: MyInputType = 42
-      # block comment 4
-      # inline comment 4
-      ):
-      # block comment 6
-      # inline comment 6
-      MyOutputType
-      # block comment 7
-      # inline comment 7
-      @myDirective
-      # block comment 8
-      # inline comment 8
-      @myOtherDirective
-      "
-    `);
-    });
-    it("prints minified without comments", () => {
-      expect(print(node, { minified: true })).toMatchInlineSnapshot(
-        '"\\"my description\\"myField(myArg:MyInputType=42):MyOutputType@myDirective@myOtherDirective"'
-      );
-    });
-    it("prints minified with comments", () => {
-      expect(print(node, { minified: true, preserveComments: true }))
-        .toMatchInlineSnapshot(`
-        "#block comment 1
-        #inline comment 1
-        \\"my description\\"
-        #block comment 2
-        #inline comment 2
-        #block comment 5
-        #inline comment 5
-        myField
-        #block comment 3
-        #inline comment 3
-        (myArg:MyInputType=42
-        #block comment 4
-        #inline comment 4
-        ):
-        #block comment 6
-        #inline comment 6
-        MyOutputType
-        #block comment 7
-        #inline comment 7
-        @myDirective
-        #block comment 8
-        #inline comment 8
-        @myOtherDirective"
+    describe("with comments", () => {
+      const q = `
+      type MyType {
+        # block comment 1
+        "my description" # inline comment 1
+        # block comment 2
+        myField # inline comment 2
+        # block comment 3
+        ( # inline comment 3
+          myArg: MyInputType = 42
+        # block comment 4
+        ) # inline comment 4
+        # block comment 5
+        : # inline comment 5
+        # block comment 6
+        MyOutputType # inline comment 6
+        # block comment 7
+        @myDirective # inline comment 7
+        # block comment 8
+        @myOtherDirective # inline comment 8
+      }
+    `;
+      const node = (
+        (parse(q).definitions[0] as ObjectTypeDefinitionNode)
+          .fields as FieldDefinitionNode[]
+      )[0];
+      it("prints pretty without comments", () => {
+        expect(print(node)).toMatchInlineSnapshot(`
+        "\\"my description\\"
+        myField(myArg: MyInputType = 42): MyOutputType @myDirective @myOtherDirective
+        "
       `);
+      });
+      it("prints pretty with comments", () => {
+        expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
+        "# block comment 1
+        # inline comment 1
+        \\"my description\\"
+        # block comment 2
+        # inline comment 2
+        # block comment 5
+        # inline comment 5
+        myField
+        # block comment 3
+        # inline comment 3
+        (
+          myArg: MyInputType = 42
+        # block comment 4
+        # inline comment 4
+        ):
+        # block comment 6
+        # inline comment 6
+        MyOutputType
+        # block comment 7
+        # inline comment 7
+        @myDirective
+        # block comment 8
+        # inline comment 8
+        @myOtherDirective
+        "
+      `);
+      });
+      it("prints minified without comments", () => {
+        expect(print(node, { minified: true })).toMatchInlineSnapshot(
+          '"\\"my description\\"myField(myArg:MyInputType=42):MyOutputType@myDirective@myOtherDirective"'
+        );
+      });
+      it("prints minified with comments", () => {
+        expect(print(node, { minified: true, preserveComments: true }))
+          .toMatchInlineSnapshot(`
+          "#block comment 1
+          #inline comment 1
+          \\"my description\\"
+          #block comment 2
+          #inline comment 2
+          #block comment 5
+          #inline comment 5
+          myField
+          #block comment 3
+          #inline comment 3
+          (myArg:MyInputType=42
+          #block comment 4
+          #inline comment 4
+          ):
+          #block comment 6
+          #inline comment 6
+          MyOutputType
+          #block comment 7
+          #inline comment 7
+          @myDirective
+          #block comment 8
+          #inline comment 8
+          @myOtherDirective"
+        `);
+      });
+    });
+    describe("input value definitions with comments", () => {
+      const q = `
+        type MyType {
+          myField(
+            myArg1: MyInputType1
+            # comment
+            myArg2: MyInputType2
+          ): MyOutputType
+        }
+      `;
+      const node = (
+        (parse(q).definitions[0] as ObjectTypeDefinitionNode)
+          .fields as FieldDefinitionNode[]
+      )[0];
+      it("prints pretty", () => {
+        expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
+          "myField(
+            myArg1: MyInputType1
+            # comment
+            myArg2: MyInputType2
+          ): MyOutputType
+          "
+        `);
+      });
+      it("prints minified", () => {
+        expect(print(node, { minified: true, preserveComments: true }))
+          .toMatchInlineSnapshot(`
+          "myField(myArg1:MyInputType1
+          #comment
+          myArg2:MyInputType2):MyOutputType"
+        `);
+      });
     });
   });
 
@@ -2395,6 +2522,41 @@ describe.each(
         `);
       });
     });
+    describe("values with comments", () => {
+      const q = `
+      {
+        myField(myArg: [
+          42
+          # comment
+          43
+        ])
+      }
+    `;
+      const node = (
+        (
+          (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
+            .selections[0] as FieldNode
+        ).arguments as ArgumentNode[]
+      )[0].value as ListValueNode;
+      it("prints pretty", () => {
+        expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
+          "[
+            42
+            # comment
+            43
+          ]
+          "
+        `);
+      });
+      it("prints minified", () => {
+        expect(print(node, { minified: true, preserveComments: true }))
+          .toMatchInlineSnapshot(`
+            "[42
+            #comment
+            43]"
+          `);
+      });
+    });
   });
 
   describe("NameNode", () => {
@@ -3129,6 +3291,41 @@ describe.each(
         );
       });
     });
+    describe("values with comments", () => {
+      const q = `
+      {
+        myField(myArg: {
+          myFieldName1: 42
+          # comment
+          myFieldName2: "my string"
+        })
+      }
+    `;
+      const node = (
+        (
+          (parse(q).definitions[0] as OperationDefinitionNode).selectionSet
+            .selections[0] as FieldNode
+        ).arguments as ArgumentNode[]
+      )[0].value as ObjectValueNode;
+      it("prints pretty", () => {
+        expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
+          "{
+            myFieldName1: 42
+            # comment
+            myFieldName2: \\"my string\\"
+          }
+          "
+        `);
+      });
+      it("prints minified", () => {
+        expect(print(node, { minified: true, preserveComments: true }))
+          .toMatchInlineSnapshot(`
+            "{myFieldName1:42
+            #comment
+            myFieldName2:\\"my string\\"}"
+          `);
+      });
+    });
   });
 
   describe("OperationDefinition", () => {
@@ -3323,6 +3520,38 @@ describe.each(
         expect(print(node, { minified: true })).toMatchInlineSnapshot(
           '"query MyOperation($myVariable1:String=\\"my very very long string\\",$myVariable2:String=\\"my very very long string\\"){myField}"'
         );
+      });
+    });
+    describe("variable definitions with comments", () => {
+      const q = `
+      query MyOperation(
+        $myVariable1: Int
+        # comment
+        $myVariable2: String
+      ) {
+        myField
+      }
+    `;
+      const node = parse(q).definitions[0] as OperationDefinitionNode;
+      it("prints pretty", () => {
+        expect(print(node, { preserveComments: true })).toMatchInlineSnapshot(`
+          "query MyOperation(
+            $myVariable1: Int
+            # comment
+            $myVariable2: String
+          ) {
+            myField
+          }
+          "
+        `);
+      });
+      it("prints minified", () => {
+        expect(print(node, { minified: true, preserveComments: true }))
+          .toMatchInlineSnapshot(`
+            "query MyOperation($myVariable1:Int
+            #comment
+            $myVariable2:String){myField}"
+          `);
       });
     });
   });
