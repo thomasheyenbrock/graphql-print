@@ -89,22 +89,34 @@ function printAST(
 ): string {
   const SPACE: Text = { t: "text", v: minified ? "" : " " };
 
-  function getComments(token: Maybe<Token>): Comment[] {
-    if (!preserveComments || !token) return [];
+  function getComments(
+    ...tokens: [Maybe<Token>, ...Maybe<Token>[]]
+  ): Comment[] {
+    if (!preserveComments) return [];
 
     const comments: Comment[] = [];
-    let running = token.prev;
-    while (
-      running?.kind === TokenKind.COMMENT &&
-      running.line !== running.prev?.line
-    ) {
-      comments.unshift({ t: "block_comment", v: running.value });
-      running = running.prev;
-    }
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      if (!token) continue;
 
-    const line = token.kind === TokenKind.BLOCK_STRING ? 0 : token.line;
-    if (token.next?.kind === TokenKind.COMMENT && token.next.line === line)
-      comments.push({ t: "inline_comment", v: token.next.value });
+      const currentComments = comments.length;
+
+      let running = token.prev;
+      while (
+        running?.kind === TokenKind.COMMENT &&
+        running.line !== running.prev?.line
+      ) {
+        comments.splice(currentComments, 0, {
+          t: "block_comment",
+          v: running.value,
+        });
+        running = running.prev;
+      }
+
+      const line = token.kind === TokenKind.BLOCK_STRING ? 0 : token.line;
+      if (token.next?.kind === TokenKind.COMMENT && token.next.line === line)
+        comments.push({ t: "inline_comment", v: token.next.value });
+    }
 
     return comments;
   }
@@ -301,8 +313,10 @@ function printAST(
         const l = node.loc as Location;
         return {
           p: [
-            ...getComments(node.name.l?.endToken),
-            ...getComments(next(node.name.l?.endToken.next, TokenKind.COLON)),
+            ...getComments(
+              node.name.l?.endToken,
+              next(node.name.l?.endToken.next, TokenKind.COLON)
+            ),
             ...node.name.p,
             text(":"),
             SPACE,
@@ -329,8 +343,7 @@ function printAST(
         const l = node.loc as Location;
         return {
           p: [
-            ...getComments(l?.startToken),
-            ...getComments(node.name.l?.endToken),
+            ...getComments(l?.startToken, node.name.l?.endToken),
             text("@"),
             ...node.name.p,
             ...printArgumentSet(node.arguments),
@@ -361,11 +374,11 @@ function printAST(
           node.kind as unknown as DelimitedListKinds
         );
 
-        const comments = [
-          ...getComments(keywordToken),
-          ...getComments(atToken),
-          ...getComments(node.name.l?.endToken),
-        ];
+        const comments = getComments(
+          keywordToken,
+          atToken,
+          node.name.l?.endToken
+        );
 
         return {
           p: [
@@ -419,10 +432,10 @@ function printAST(
       leave(node) {
         const l = node.loc as Location;
 
-        const comments = [
-          ...getComments(next(l?.startToken, TokenKind.NAME)),
-          ...getComments(node.name.l?.endToken),
-        ];
+        const comments = getComments(
+          next(l?.startToken, TokenKind.NAME),
+          node.name.l?.endToken
+        );
 
         return {
           p: [
@@ -442,9 +455,11 @@ function printAST(
         const l = node.loc as Location;
         return {
           p: [
-            ...getComments(l?.startToken),
-            ...getComments(next(l?.startToken.next, TokenKind.NAME)),
-            ...getComments(node.name.l?.endToken),
+            ...getComments(
+              l?.startToken,
+              next(l?.startToken.next, TokenKind.NAME),
+              node.name.l?.endToken
+            ),
             text("extend enum "),
             ...node.name.p,
             ...withSpace(join(node.directives || [], [SPACE])),
@@ -486,11 +501,11 @@ function printAST(
         const l = node.loc as Location;
         return {
           p: [
-            ...getComments(node.alias?.l?.endToken),
             ...getComments(
-              node.alias ? next(l?.startToken?.next, TokenKind.COLON) : null
+              node.alias?.l?.endToken,
+              node.alias ? next(l?.startToken?.next, TokenKind.COLON) : null,
+              node.name.l?.endToken
             ),
-            ...getComments(node.name.l?.endToken),
             ...(node.alias ? [...node.alias.p, text(":"), SPACE] : []),
             ...node.name.p,
             ...printArgumentSet(node.arguments),
@@ -506,10 +521,7 @@ function printAST(
         const l = node.loc as Location;
 
         const colonToken = prev(node.type.l?.startToken.prev, TokenKind.COLON);
-        const comments = [
-          ...getComments(node.name.l?.endToken),
-          ...getComments(colonToken),
-        ];
+        const comments = getComments(node.name.l?.endToken, colonToken);
 
         return {
           p: [
@@ -546,9 +558,9 @@ function printAST(
         const l = node.loc as Location;
         return {
           p: [
-            ...getComments(l?.startToken),
-            ...getComments(node.name.l?.endToken),
             ...getComments(
+              l?.startToken,
+              node.name.l?.endToken,
               prev(node.typeCondition.l?.endToken.prev, TokenKind.NAME)
             ),
             text("fragment "),
@@ -567,8 +579,7 @@ function printAST(
         const l = node.loc as Location;
         return {
           p: [
-            ...getComments(l?.startToken),
-            ...getComments(node.name.l?.endToken),
+            ...getComments(l?.startToken, node.name.l?.endToken),
             text("..."),
             ...node.name.p,
             ...withSpace(join(node.directives || [], [SPACE])),
@@ -582,8 +593,8 @@ function printAST(
         const l = node.loc as Location;
         return {
           p: [
-            ...getComments(l?.startToken),
             ...getComments(
+              l?.startToken,
               node.typeCondition
                 ? prev(node.typeCondition.l?.endToken.prev, TokenKind.NAME)
                 : null
@@ -603,10 +614,11 @@ function printAST(
       leave(node) {
         const l = node.loc as Location;
 
-        const comments = [
-          ...getComments(next(l?.startToken, TokenKind.NAME)),
-          ...getComments(node.name.l?.endToken),
-        ];
+        const comments = getComments(
+          next(l?.startToken, TokenKind.NAME),
+          node.name.l?.endToken
+        );
+
         return {
           p: [
             ...printDescription(node.description, comments),
@@ -630,9 +642,11 @@ function printAST(
         const l = node.loc as Location;
         return {
           p: [
-            ...getComments(l?.startToken),
-            ...getComments(next(l?.startToken?.next, TokenKind.NAME)),
-            ...getComments(node.name.l?.endToken),
+            ...getComments(
+              l?.startToken,
+              next(l?.startToken?.next, TokenKind.NAME),
+              node.name.l?.endToken
+            ),
             text("extend input "),
             ...node.name.p,
             ...withSpace(join(node.directives || [], [SPACE])),
@@ -651,10 +665,10 @@ function printAST(
       leave(node) {
         const l = node.loc as Location;
 
-        const comments = [
-          ...getComments(node.name.l?.endToken),
-          ...getComments(next(node.name.l?.endToken.next, TokenKind.COLON)),
-        ];
+        const comments = getComments(
+          node.name.l?.endToken,
+          next(node.name.l?.endToken.next, TokenKind.COLON)
+        );
 
         return {
           p: [
@@ -675,10 +689,10 @@ function printAST(
       leave(node) {
         const l = node.loc as Location;
 
-        const comments = [
-          ...getComments(next(l?.startToken, TokenKind.NAME)),
-          ...getComments(node.name.l?.endToken),
-        ];
+        const comments = getComments(
+          next(l?.startToken, TokenKind.NAME),
+          node.name.l?.endToken
+        );
 
         return {
           p: [
@@ -702,9 +716,11 @@ function printAST(
         const l = node.loc as Location;
         return {
           p: [
-            ...getComments(l?.startToken),
-            ...getComments(next(l?.startToken.next, TokenKind.NAME)),
-            ...getComments(node.name.l?.endToken),
+            ...getComments(
+              l?.startToken,
+              next(l?.startToken.next, TokenKind.NAME),
+              node.name.l?.endToken
+            ),
             text("extend interface "),
             ...node.name.p,
             ...printDelimitedList(
@@ -807,8 +823,10 @@ function printAST(
         const l = node.loc as Location;
         return {
           p: [
-            ...getComments(node.name.l?.endToken),
-            ...getComments(next(node.name.l?.endToken.next, TokenKind.COLON)),
+            ...getComments(
+              node.name.l?.endToken,
+              next(node.name.l?.endToken.next, TokenKind.COLON)
+            ),
             ...node.name.p,
             text(":"),
             SPACE,
@@ -823,8 +841,10 @@ function printAST(
         const l = node.loc as Location;
 
         const comments = [
-          ...getComments(next(l?.startToken, TokenKind.NAME)),
-          ...getComments(node.name.l?.endToken),
+          ...getComments(
+            next(l?.startToken, TokenKind.NAME),
+            node.name.l?.endToken
+          ),
         ];
 
         return {
@@ -849,9 +869,11 @@ function printAST(
         const l = node.loc as Location;
         return {
           p: [
-            ...getComments(l?.startToken),
-            ...getComments(next(l?.startToken.next, TokenKind.NAME)),
-            ...getComments(node.name.l?.endToken),
+            ...getComments(
+              l?.startToken,
+              next(l?.startToken.next, TokenKind.NAME),
+              node.name.l?.endToken
+            ),
             text("extend type "),
             ...node.name.p,
             ...printDelimitedList(
@@ -897,8 +919,7 @@ function printAST(
 
         return {
           p: [
-            ...getComments(keywordToken),
-            ...getComments(node.name?.l?.endToken),
+            ...getComments(keywordToken, node.name?.l?.endToken),
             text(node.operation as unknown as OperationTypeNode),
             ...(node.name ? [text(" "), ...node.name.p] : []),
             ...(isEmpty(node.variableDefinitions)
@@ -921,8 +942,10 @@ function printAST(
         const l = node.loc as Location;
         return {
           p: [
-            ...getComments(l?.startToken),
-            ...getComments(next(l?.startToken.next, TokenKind.COLON)),
+            ...getComments(
+              l?.startToken,
+              next(l?.startToken.next, TokenKind.COLON)
+            ),
             text(node.operation as unknown as OperationTypeNode),
             text(":"),
             SPACE,
@@ -936,10 +959,10 @@ function printAST(
       leave(node) {
         const l = node.loc as Location;
 
-        const comments = [
-          ...getComments(next(l?.startToken, TokenKind.NAME)),
-          ...getComments(node.name.l?.endToken),
-        ];
+        const comments = getComments(
+          next(l?.startToken, TokenKind.NAME),
+          node.name.l?.endToken
+        );
 
         return {
           p: [
@@ -958,9 +981,11 @@ function printAST(
         const l = node.loc as Location;
         return {
           p: [
-            ...getComments(l?.startToken),
-            ...getComments(next(l?.startToken.next, TokenKind.NAME)),
-            ...getComments(node.name.l?.endToken),
+            ...getComments(
+              l?.startToken,
+              next(l?.startToken.next, TokenKind.NAME),
+              node.name.l?.endToken
+            ),
             text("extend scalar "),
             ...node.name.p,
             ...withSpace(join(node.directives || [], [SPACE])),
@@ -992,8 +1017,10 @@ function printAST(
         const l = node.loc as Location;
         return {
           p: [
-            ...getComments(l?.startToken),
-            ...getComments(next(l?.startToken.next, TokenKind.NAME)),
+            ...getComments(
+              l?.startToken,
+              next(l?.startToken.next, TokenKind.NAME)
+            ),
             text("extend schema"),
             ...withSpace(join(node.directives || [], [SPACE])),
             ...withSpace(printOperationTypeDefinitionSet(node.operationTypes)),
@@ -1079,10 +1106,10 @@ function printAST(
       leave(node) {
         const l = node.loc as Location;
 
-        const comments = [
-          ...getComments(next(l?.startToken, TokenKind.NAME)),
-          ...getComments(node.name.l?.endToken),
-        ];
+        const comments = getComments(
+          next(l?.startToken, TokenKind.NAME),
+          node.name.l?.endToken
+        );
 
         return {
           p: [
@@ -1105,9 +1132,11 @@ function printAST(
         const l = node.loc as Location;
         return {
           p: [
-            ...getComments(l?.startToken),
-            ...getComments(next(l?.startToken.next, TokenKind.NAME)),
-            ...getComments(node.name.l?.endToken),
+            ...getComments(
+              l?.startToken,
+              next(l?.startToken.next, TokenKind.NAME),
+              node.name.l?.endToken
+            ),
             text("extend union "),
             ...node.name.p,
             ...withSpace(join(node.directives || [], [SPACE])),
@@ -1125,8 +1154,7 @@ function printAST(
         const l = node.loc as Location;
         return {
           p: [
-            ...getComments(l?.startToken),
-            ...getComments(l?.endToken),
+            ...getComments(l?.startToken, l?.endToken),
             text("$"),
             ...node.name.p,
           ],
