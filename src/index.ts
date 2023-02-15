@@ -1100,7 +1100,7 @@ function printAST(
     }
   }
   printCurrentLine();
-  return printed.replace(/^\n*/, "").replace(/\n*$/, minified ? "" : "\n");
+  return printed.trim() + (minified ? "" : "\n");
 }
 
 type FilteredComments = {
