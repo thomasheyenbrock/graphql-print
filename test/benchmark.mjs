@@ -4,6 +4,8 @@ import { execSync } from "node:child_process";
 import { readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
+const ref = process.argv[2];
+
 const __dirname = new URL(import.meta.url).pathname
   .split("/")
   .slice(0, -1)
@@ -16,7 +18,8 @@ const KITCHEN_SINK = parse(
 async function main() {
   execSync("pnpm build");
   execSync("cp -r dist dist-new");
-  execSync("git stash");
+
+  execSync(ref ? `git checkout ${ref}` : "git stash");
   execSync("pnpm build");
 
   const sizeOld = statSync(join(__dirname, "../dist/index.js")).size;
@@ -106,7 +109,7 @@ async function main() {
     })
     .run();
 
-  execSync("git stash pop");
+  execSync(ref ? "git checkout main" : "git stash pop");
   execSync("rm -r dist-new");
 }
 
