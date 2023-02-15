@@ -1146,8 +1146,7 @@ function join<T extends TransformedNode, S extends PrintToken>(
   const joined: (S | T["p"][number])[] = [];
   for (let i = 0; i < list.length; i++) {
     if (i > 0) joined.push(...delimiter);
-    const item = list[i];
-    joined.push(...item.p);
+    joined.push(...list[i].p);
   }
   return joined;
 }
