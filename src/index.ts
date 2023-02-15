@@ -384,13 +384,10 @@ function printAST(
       const comments = getComments(l?.endToken);
       return {
         p: [
-          ...join(
-            node.definitions.map((definition) => {
-              while (definition.p[0].t === "hard_line") definition.p.shift();
-              return definition;
-            }),
-            [hardLine(), ...(minified ? [] : [hardLine()])]
-          ),
+          ...join(node.definitions, [
+            hardLine(),
+            ...(minified ? [] : [hardLine()]),
+          ]),
           ...(minified || comments.length === 0
             ? []
             : [hardLine(), hardLine()]),
