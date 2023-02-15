@@ -56,9 +56,14 @@ export function print(
   node: ASTNode | ASTNode[],
   options: PrintOptions = {}
 ): string {
-  return (Array.isArray(node) ? node : [node])
-    .map((node) => printAST(node, options))
-    .join("\n");
+  if (!Array.isArray(node)) return printAST(node, options);
+
+  let printed = "";
+  for (let i = 0; i < node.length; i++) {
+    if (i > 0) printed += "\n";
+    printed += printAST(node[i], options);
+  }
+  return printed;
 }
 
 function printAST(
@@ -1011,40 +1016,21 @@ function printAST(
     },
   });
 
-  const resolveComments = list.p.reduce<(Text | SoftLine | HardLine)[]>(
-    (acc, item) => {
-      switch (item.t) {
-        case "block_comment":
-        case "inline_comment":
-          if (preserveComments) {
-            if (acc.length > 0) {
-              const type = acc[acc.length - 1].t;
-              if (type === "text") acc.push(hardLine());
-              else if (type === "soft_line") acc[acc.length - 1] = hardLine();
-            }
-            acc.push(
-              ...join(
-                item.v
-                  .trim()
-                  .split("\n")
-                  .map((line) => ({
-                    p: [text("#"), SPACE, text(line)],
-                    l: undefined,
-                  })),
-                [hardLine()]
-              )
-            );
-            acc.push(hardLine());
-          }
-          break;
-        default:
-          acc.push(item);
-          break;
+  for (let i = 0; i < list.p.length; i++) {
+    const item = list.p[i];
+    if (item.t === "block_comment" || item.t === "inline_comment") {
+      if (preserveComments) {
+        if (i > 0) {
+          const type = list.p[i - 1].t;
+          if (type === "text") {
+            list.p.splice(i, 0, hardLine());
+            i++;
+          } else if (type === "soft_line") list.p[i - 1] = hardLine();
+        }
+        list.p.splice(i, 1, text("#"), SPACE, text(item.v.trim()), hardLine());
       }
-      return acc;
-    },
-    []
-  );
+    }
+  }
 
   let printed = "";
   let currentLine: (Text | SoftLine)[] = [];
@@ -1090,7 +1076,8 @@ function printAST(
     currentLine = [];
   }
 
-  for (const item of resolveComments) {
+  for (let i = 0; i < list.p.length; i++) {
+    const item = list.p[i] as Text | SoftLine | HardLine;
     if (item.t === "hard_line") {
       printCurrentLine();
       handleIndentation(item.i);
@@ -1109,21 +1096,20 @@ type FilteredComments = {
 };
 
 function filterComments(tokens: PrintToken[]): FilteredComments {
-  return tokens.reduce<FilteredComments>(
-    (acc, printToken) => {
-      switch (printToken.t) {
-        case "block_comment":
-        case "inline_comment":
-          acc.comments.push(printToken);
-          break;
-        default:
-          acc.rest.push(printToken);
-          break;
-      }
-      return acc;
-    },
-    { comments: [], rest: [] }
-  );
+  const comments: Comment[] = [];
+  const rest: (Text | SoftLine | HardLine)[] = [];
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    switch (token.t) {
+      case "block_comment":
+      case "inline_comment":
+        comments.push(token);
+        break;
+      default:
+        rest.push(token);
+    }
+  }
+  return { comments, rest };
 }
 
 function prev(
