@@ -1,16 +1,8 @@
-import {
-  ASTNode,
-  Kind,
-  Location as NonNullLocation,
-  OperationTypeNode,
-  Token,
-  TokenKind,
-  visit,
-} from "graphql";
+import { ASTNode, Kind, Location, Token, TokenKind } from "graphql";
+
+import { visit } from "./visitor";
 
 type Maybe<T> = T | null | undefined;
-
-type Location = NonNullLocation | undefined;
 
 type Indentation = "+" | "-";
 
@@ -31,7 +23,7 @@ type Comment = { t: "block_comment" | "inline_comment"; v: string };
 
 type PrintToken = Text | SoftLine | HardLine | Comment;
 
-type TransformedNode = { p: PrintToken[]; l: Location };
+type TransformedNode = { p: PrintToken[]; l: Location | undefined };
 
 function text(value: string): Text {
   return { t: "text", v: value };
@@ -52,15 +44,6 @@ function hardLine(indentation?: Indentation): HardLine {
 const BRACES = [TokenKind.BRACE_L, TokenKind.BRACE_R] as const;
 const BRACKETS = [TokenKind.BRACKET_L, TokenKind.BRACKET_R] as const;
 const PARENS = [TokenKind.PAREN_L, TokenKind.PAREN_R] as const;
-
-type DelimitedListKinds =
-  | Kind.OBJECT_TYPE_DEFINITION
-  | Kind.OBJECT_TYPE_EXTENSION
-  | Kind.INTERFACE_TYPE_DEFINITION
-  | Kind.INTERFACE_TYPE_EXTENSION
-  | Kind.UNION_TYPE_DEFINITION
-  | Kind.UNION_TYPE_EXTENSION
-  | Kind.DIRECTIVE_DEFINITION;
 
 type PrintOptions = {
   indentationStep?: string;
@@ -201,7 +184,14 @@ function printAST(
 
   function printDelimitedList(
     items: Maybe<readonly TransformedNode[]>,
-    parentKind: DelimitedListKinds
+    parentKind:
+      | Kind.OBJECT_TYPE_DEFINITION
+      | Kind.OBJECT_TYPE_EXTENSION
+      | Kind.INTERFACE_TYPE_DEFINITION
+      | Kind.INTERFACE_TYPE_EXTENSION
+      | Kind.UNION_TYPE_DEFINITION
+      | Kind.UNION_TYPE_EXTENSION
+      | Kind.DIRECTIVE_DEFINITION
   ): PrintToken[] {
     if (isEmpty(items)) return [];
 
@@ -308,880 +298,716 @@ function printAST(
   }
 
   const list = visit<TransformedNode>(ast, {
-    Argument: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [
-            ...getComments(
-              node.name.l?.endToken,
-              next(node.name.l?.endToken.next, TokenKind.COLON)
-            ),
-            ...node.name.p,
-            text(":"),
-            SPACE,
-            ...node.value.p,
-          ],
-          l,
-        };
-      },
-    },
-    BooleanValue: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [
-            ...getComments(l?.endToken),
-            text("" + (node.value as unknown as boolean)),
-          ],
-          l,
-        };
-      },
-    },
-    Directive: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [
-            ...getComments(l?.startToken, node.name.l?.endToken),
-            text("@"),
-            ...node.name.p,
-            ...printArgumentSet(node.arguments),
-          ],
-          l,
-        };
-      },
-    },
-    DirectiveDefinition: {
-      leave(node) {
-        const l = node.loc as Location;
-
-        const keywordToken: Maybe<Token> = next(l?.startToken, TokenKind.NAME);
-        const atToken = next(keywordToken?.next, TokenKind.AT);
-
-        const repeatableComments = node.repeatable
-          ? getComments(
-              prev(
-                node.locations[0]?.l?.startToken,
-                TokenKind.NAME,
-                "repeatable"
-              )
-            )
-          : [];
-
-        const locations = printDelimitedList(
-          node.locations,
-          node.kind as unknown as DelimitedListKinds
-        );
-
-        const comments = getComments(
-          keywordToken,
-          atToken,
-          node.name.l?.endToken
-        );
-
-        return {
-          p: [
-            ...printDescription(node.description, comments),
-            ...comments,
-            text("directive"),
-            SPACE,
-            text(TokenKind.AT),
-            ...node.name.p,
-            ...printInputValueDefinitionSet(
-              node.arguments,
-              node.kind as unknown as Kind
-            ),
-            ...repeatableComments,
-            text(
-              node.repeatable
-                ? repeatableComments.length > 0
-                  ? "repeatable"
-                  : " repeatable"
-                : ""
-            ),
-            ...locations,
-          ],
-          l,
-        };
-      },
-    },
-    Document: {
-      leave(node) {
-        const l = node.loc as Location;
-        const comments = getComments(l?.endToken);
-        return {
-          p: [
-            ...join(
-              node.definitions.map((definition) => {
-                while (definition.p[0].t === "hard_line") definition.p.shift();
-                return definition;
-              }),
-              [hardLine(), ...(minified ? [] : [hardLine()])]
-            ),
-            ...(minified || comments.length === 0
-              ? []
-              : [hardLine(), hardLine()]),
-            ...comments,
-          ],
-          l,
-        };
-      },
-    },
-    EnumTypeDefinition: {
-      leave(node) {
-        const l = node.loc as Location;
-
-        const comments = getComments(
-          next(l?.startToken, TokenKind.NAME),
-          node.name.l?.endToken
-        );
-
-        return {
-          p: [
-            ...printDescription(node.description, comments),
-            ...comments,
-            text("enum "),
-            ...node.name.p,
-            ...withSpace(join(node.directives || [], [SPACE])),
-            ...withSpace(printEnumValueDefinitionSet(node.values)),
-          ],
-          l,
-        };
-      },
-    },
-    EnumTypeExtension: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [
-            ...getComments(
-              l?.startToken,
-              next(l?.startToken.next, TokenKind.NAME),
-              node.name.l?.endToken
-            ),
-            text("extend enum "),
-            ...node.name.p,
-            ...withSpace(join(node.directives || [], [SPACE])),
-            ...withSpace(printEnumValueDefinitionSet(node.values)),
-          ],
-          l,
-        };
-      },
-    },
-    EnumValue: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [
-            ...getComments(l?.endToken),
-            text(node.value as unknown as string),
-          ],
-          l,
-        };
-      },
-    },
-    EnumValueDefinition: {
-      leave(node) {
-        const l = node.loc as Location;
-        const comments = getComments(node.name.l?.endToken);
-        return {
-          p: [
-            ...printDescription(node.description, comments),
-            ...comments,
-            ...node.name.p,
-            ...withSpace(join(node.directives || [], [SPACE])),
-          ],
-          l,
-        };
-      },
-    },
-    Field: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [
-            ...getComments(
-              node.alias?.l?.endToken,
-              node.alias ? next(l?.startToken?.next, TokenKind.COLON) : null,
-              node.name.l?.endToken
-            ),
-            ...(node.alias ? [...node.alias.p, text(":"), SPACE] : []),
-            ...node.name.p,
-            ...printArgumentSet(node.arguments),
-            ...withSpace(join(node.directives || [], [SPACE])),
-            ...withSpace(node.selectionSet?.p || []),
-          ],
-          l,
-        };
-      },
-    },
-    FieldDefinition: {
-      leave(node) {
-        const l = node.loc as Location;
-
-        const colonToken = prev(node.type.l?.startToken.prev, TokenKind.COLON);
-        const comments = getComments(node.name.l?.endToken, colonToken);
-
-        return {
-          p: [
-            ...printDescription(node.description, comments),
-            ...comments,
-            ...node.name.p,
-            ...printInputValueDefinitionSet(
-              node.arguments,
-              node.kind as unknown as Kind
-            ),
-            text(":"),
-            SPACE,
-            ...node.type.p,
-            ...withSpace(join(node.directives || [], [SPACE])),
-          ],
-          l,
-        };
-      },
-    },
-    FloatValue: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [
-            ...getComments(l?.endToken),
-            text(node.value as unknown as string),
-          ],
-          l,
-        };
-      },
-    },
-    FragmentDefinition: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [
-            ...getComments(
-              l?.startToken,
-              node.name.l?.endToken,
-              prev(node.typeCondition.l?.endToken.prev, TokenKind.NAME)
-            ),
-            text("fragment "),
-            ...node.name.p,
-            text(" on "),
-            ...node.typeCondition.p,
-            ...withSpace(join(node.directives || [], [SPACE])),
-            ...withSpace(node.selectionSet.p),
-          ],
-          l,
-        };
-      },
-    },
-    FragmentSpread: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [
-            ...getComments(l?.startToken, node.name.l?.endToken),
-            text("..."),
-            ...node.name.p,
-            ...withSpace(join(node.directives || [], [SPACE])),
-          ],
-          l,
-        };
-      },
-    },
-    InlineFragment: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [
-            ...getComments(
-              l?.startToken,
-              node.typeCondition
-                ? prev(node.typeCondition.l?.endToken.prev, TokenKind.NAME)
-                : null
-            ),
-            text("..."),
-            ...(node.typeCondition
-              ? [text("on "), ...node.typeCondition.p]
-              : []),
-            ...withSpace(join(node.directives || [], [SPACE])),
-            ...withSpace(node.selectionSet.p),
-          ],
-          l,
-        };
-      },
-    },
-    InputObjectTypeDefinition: {
-      leave(node) {
-        const l = node.loc as Location;
-
-        const comments = getComments(
-          next(l?.startToken, TokenKind.NAME),
-          node.name.l?.endToken
-        );
-
-        return {
-          p: [
-            ...printDescription(node.description, comments),
-            ...comments,
-            text("input "),
-            ...node.name.p,
-            ...withSpace(join(node.directives || [], [SPACE])),
-            ...withSpace(
-              printInputValueDefinitionSet(
-                node.fields,
-                node.kind as unknown as Kind
-              )
-            ),
-          ],
-          l,
-        };
-      },
-    },
-    InputObjectTypeExtension: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [
-            ...getComments(
-              l?.startToken,
-              next(l?.startToken?.next, TokenKind.NAME),
-              node.name.l?.endToken
-            ),
-            text("extend input "),
-            ...node.name.p,
-            ...withSpace(join(node.directives || [], [SPACE])),
-            ...withSpace(
-              printInputValueDefinitionSet(
-                node.fields,
-                node.kind as unknown as Kind
-              )
-            ),
-          ],
-          l,
-        };
-      },
-    },
-    InputValueDefinition: {
-      leave(node) {
-        const l = node.loc as Location;
-
-        const comments = getComments(
-          node.name.l?.endToken,
-          next(node.name.l?.endToken.next, TokenKind.COLON)
-        );
-
-        return {
-          p: [
-            ...printDescription(node.description, comments),
-            ...comments,
-            ...node.name.p,
-            text(":"),
-            SPACE,
-            ...node.type.p,
-            ...printDefaultValue(node.defaultValue),
-            ...withSpace(join(node.directives || [], [SPACE])),
-          ],
-          l,
-        };
-      },
-    },
-    InterfaceTypeDefinition: {
-      leave(node) {
-        const l = node.loc as Location;
-
-        const comments = getComments(
-          next(l?.startToken, TokenKind.NAME),
-          node.name.l?.endToken
-        );
-
-        return {
-          p: [
-            ...printDescription(node.description, comments),
-            ...comments,
-            text("interface "),
-            ...node.name.p,
-            ...printDelimitedList(
-              node.interfaces,
-              node.kind as unknown as DelimitedListKinds
-            ),
-            ...withSpace(join(node.directives || [], [SPACE])),
-            ...withSpace(printFieldDefinitionSet(node.fields)),
-          ],
-          l,
-        };
-      },
-    },
-    InterfaceTypeExtension: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [
-            ...getComments(
-              l?.startToken,
-              next(l?.startToken.next, TokenKind.NAME),
-              node.name.l?.endToken
-            ),
-            text("extend interface "),
-            ...node.name.p,
-            ...printDelimitedList(
-              node.interfaces,
-              node.kind as unknown as DelimitedListKinds
-            ),
-            ...withSpace(join(node.directives || [], [SPACE])),
-            ...withSpace(printFieldDefinitionSet(node.fields)),
-          ],
-          l,
-        };
-      },
-    },
-    IntValue: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [
-            ...getComments(l?.endToken),
-            text(node.value as unknown as string),
-          ],
-          l,
-        };
-      },
-    },
-    ListType: {
-      leave(node) {
-        const l = node.loc as Location;
-        const { comments, rest } = filterComments(node.type.p);
-        return {
-          p: [
-            ...getComments(l?.startToken),
-            ...comments,
-            ...getComments(l?.endToken),
-            text("["),
-            ...rest,
-            text("]"),
-          ],
-          l,
-        };
-      },
-    },
-    ListValue: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: isEmpty(node.values)
-            ? [
-                ...getComments(l?.startToken),
-                text(TokenKind.BRACKET_L),
-                ...getComments(l?.endToken),
-                text(TokenKind.BRACKET_R),
-              ]
-            : printWrappedListWithComments(
-                node.values,
-                BRACKETS,
-                "",
-                "," + SPACE.v
-              ),
-          l,
-        };
-      },
-    },
-    Name: {
-      leave(node) {
-        const l = node.loc as Location;
-        return { p: [text(node.value as unknown as string)], l };
-      },
-    },
-    NamedType: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [...getComments(l?.endToken), ...node.name.p],
-          l,
-        };
-      },
-    },
-    NonNullType: {
-      leave(node) {
-        const l = node.loc as Location;
-        const { comments, rest } = filterComments(node.type.p);
-        return {
-          p: [...comments, ...getComments(l?.endToken), ...rest, text("!")],
-          l,
-        };
-      },
-    },
-    NullValue: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [...getComments(l?.endToken), text("null")],
-          l,
-        };
-      },
-    },
-    ObjectField: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [
-            ...getComments(
-              node.name.l?.endToken,
-              next(node.name.l?.endToken.next, TokenKind.COLON)
-            ),
-            ...node.name.p,
-            text(":"),
-            SPACE,
-            ...node.value.p,
-          ],
-          l,
-        };
-      },
-    },
-    ObjectTypeDefinition: {
-      leave(node) {
-        const l = node.loc as Location;
-
-        const comments = [
+    Argument(node) {
+      return {
+        p: [
           ...getComments(
-            next(l?.startToken, TokenKind.NAME),
+            node.name.l?.endToken,
+            next(node.name.l?.endToken.next, TokenKind.COLON)
+          ),
+          ...node.name.p,
+          text(":"),
+          SPACE,
+          ...node.value.p,
+        ],
+        l: node.loc,
+      };
+    },
+    BooleanValue(node) {
+      const l = node.loc;
+      return {
+        p: [...getComments(l?.endToken), text("" + node.value)],
+        l,
+      };
+    },
+    Directive(node) {
+      const l = node.loc;
+      return {
+        p: [
+          ...getComments(l?.startToken, node.name.l?.endToken),
+          text("@"),
+          ...node.name.p,
+          ...printArgumentSet(node.arguments),
+        ],
+        l,
+      };
+    },
+    DirectiveDefinition(node) {
+      const l = node.loc;
+
+      const keywordToken: Maybe<Token> = next(l?.startToken, TokenKind.NAME);
+      const atToken = next(keywordToken?.next, TokenKind.AT);
+
+      const repeatableComments = node.repeatable
+        ? getComments(
+            prev(node.locations[0]?.l?.startToken, TokenKind.NAME, "repeatable")
+          )
+        : [];
+
+      const locations = printDelimitedList(node.locations, node.kind);
+
+      const comments = getComments(
+        keywordToken,
+        atToken,
+        node.name.l?.endToken
+      );
+
+      return {
+        p: [
+          ...printDescription(node.description, comments),
+          ...comments,
+          text("directive"),
+          SPACE,
+          text(TokenKind.AT),
+          ...node.name.p,
+          ...printInputValueDefinitionSet(node.arguments, node.kind),
+          ...repeatableComments,
+          text(
+            node.repeatable
+              ? repeatableComments.length > 0
+                ? "repeatable"
+                : " repeatable"
+              : ""
+          ),
+          ...locations,
+        ],
+        l,
+      };
+    },
+    Document(node) {
+      const l = node.loc;
+      const comments = getComments(l?.endToken);
+      return {
+        p: [
+          ...join(
+            node.definitions.map((definition) => {
+              while (definition.p[0].t === "hard_line") definition.p.shift();
+              return definition;
+            }),
+            [hardLine(), ...(minified ? [] : [hardLine()])]
+          ),
+          ...(minified || comments.length === 0
+            ? []
+            : [hardLine(), hardLine()]),
+          ...comments,
+        ],
+        l,
+      };
+    },
+    EnumTypeDefinition(node) {
+      const l = node.loc;
+
+      const comments = getComments(
+        next(l?.startToken, TokenKind.NAME),
+        node.name.l?.endToken
+      );
+
+      return {
+        p: [
+          ...printDescription(node.description, comments),
+          ...comments,
+          text("enum "),
+          ...node.name.p,
+          ...withSpace(join(node.directives || [], [SPACE])),
+          ...withSpace(printEnumValueDefinitionSet(node.values)),
+        ],
+        l,
+      };
+    },
+    EnumTypeExtension(node) {
+      const l = node.loc;
+      return {
+        p: [
+          ...getComments(
+            l?.startToken,
+            next(l?.startToken.next, TokenKind.NAME),
             node.name.l?.endToken
           ),
-        ];
+          text("extend enum "),
+          ...node.name.p,
+          ...withSpace(join(node.directives || [], [SPACE])),
+          ...withSpace(printEnumValueDefinitionSet(node.values)),
+        ],
+        l,
+      };
+    },
+    EnumValue(node) {
+      const l = node.loc;
+      return {
+        p: [...getComments(l?.endToken), text(node.value)],
+        l,
+      };
+    },
+    EnumValueDefinition(node) {
+      const comments = getComments(node.name.l?.endToken);
+      return {
+        p: [
+          ...printDescription(node.description, comments),
+          ...comments,
+          ...node.name.p,
+          ...withSpace(join(node.directives || [], [SPACE])),
+        ],
+        l: node.loc,
+      };
+    },
+    Field(node) {
+      const l = node.loc;
+      return {
+        p: [
+          ...getComments(
+            node.alias?.l?.endToken,
+            node.alias ? next(l?.startToken?.next, TokenKind.COLON) : null,
+            node.name.l?.endToken
+          ),
+          ...(node.alias ? [...node.alias.p, text(":"), SPACE] : []),
+          ...node.name.p,
+          ...printArgumentSet(node.arguments),
+          ...withSpace(join(node.directives || [], [SPACE])),
+          ...withSpace(node.selectionSet?.p || []),
+        ],
+        l,
+      };
+    },
+    FieldDefinition(node) {
+      const colonToken = prev(node.type.l?.startToken.prev, TokenKind.COLON);
+      const comments = getComments(node.name.l?.endToken, colonToken);
 
-        return {
-          p: [
-            ...printDescription(node.description, comments),
-            ...comments,
-            text("type "),
-            ...node.name.p,
-            ...printDelimitedList(
-              node.interfaces,
-              node.kind as unknown as DelimitedListKinds
+      return {
+        p: [
+          ...printDescription(node.description, comments),
+          ...comments,
+          ...node.name.p,
+          ...printInputValueDefinitionSet(node.arguments, node.kind),
+          text(":"),
+          SPACE,
+          ...node.type.p,
+          ...withSpace(join(node.directives || [], [SPACE])),
+        ],
+        l: node.loc,
+      };
+    },
+    FloatValue(node) {
+      const l = node.loc;
+      return {
+        p: [...getComments(l?.endToken), text(node.value)],
+        l,
+      };
+    },
+    FragmentDefinition(node) {
+      const l = node.loc;
+      return {
+        p: [
+          ...getComments(
+            l?.startToken,
+            node.name.l?.endToken,
+            prev(node.typeCondition.l?.endToken.prev, TokenKind.NAME)
+          ),
+          text("fragment "),
+          ...node.name.p,
+          text(" on "),
+          ...node.typeCondition.p,
+          ...withSpace(join(node.directives || [], [SPACE])),
+          ...withSpace(node.selectionSet.p),
+        ],
+        l,
+      };
+    },
+    FragmentSpread(node) {
+      const l = node.loc;
+      return {
+        p: [
+          ...getComments(l?.startToken, node.name.l?.endToken),
+          text("..."),
+          ...node.name.p,
+          ...withSpace(join(node.directives || [], [SPACE])),
+        ],
+        l,
+      };
+    },
+    InlineFragment(node) {
+      const l = node.loc;
+      return {
+        p: [
+          ...getComments(
+            l?.startToken,
+            node.typeCondition
+              ? prev(node.typeCondition.l?.endToken.prev, TokenKind.NAME)
+              : null
+          ),
+          text("..."),
+          ...(node.typeCondition ? [text("on "), ...node.typeCondition.p] : []),
+          ...withSpace(join(node.directives || [], [SPACE])),
+          ...withSpace(node.selectionSet.p),
+        ],
+        l,
+      };
+    },
+    InputObjectTypeDefinition(node) {
+      const l = node.loc;
+
+      const comments = getComments(
+        next(l?.startToken, TokenKind.NAME),
+        node.name.l?.endToken
+      );
+
+      return {
+        p: [
+          ...printDescription(node.description, comments),
+          ...comments,
+          text("input "),
+          ...node.name.p,
+          ...withSpace(join(node.directives || [], [SPACE])),
+          ...withSpace(printInputValueDefinitionSet(node.fields, node.kind)),
+        ],
+        l,
+      };
+    },
+    InputObjectTypeExtension(node) {
+      const l = node.loc;
+      return {
+        p: [
+          ...getComments(
+            l?.startToken,
+            next(l?.startToken?.next, TokenKind.NAME),
+            node.name.l?.endToken
+          ),
+          text("extend input "),
+          ...node.name.p,
+          ...withSpace(join(node.directives || [], [SPACE])),
+          ...withSpace(printInputValueDefinitionSet(node.fields, node.kind)),
+        ],
+        l,
+      };
+    },
+    InputValueDefinition(node) {
+      const comments = getComments(
+        node.name.l?.endToken,
+        next(node.name.l?.endToken.next, TokenKind.COLON)
+      );
+
+      return {
+        p: [
+          ...printDescription(node.description, comments),
+          ...comments,
+          ...node.name.p,
+          text(":"),
+          SPACE,
+          ...node.type.p,
+          ...printDefaultValue(node.defaultValue),
+          ...withSpace(join(node.directives || [], [SPACE])),
+        ],
+        l: node.loc,
+      };
+    },
+    InterfaceTypeDefinition(node) {
+      const l = node.loc;
+
+      const comments = getComments(
+        next(l?.startToken, TokenKind.NAME),
+        node.name.l?.endToken
+      );
+
+      return {
+        p: [
+          ...printDescription(node.description, comments),
+          ...comments,
+          text("interface "),
+          ...node.name.p,
+          ...printDelimitedList(node.interfaces, node.kind),
+          ...withSpace(join(node.directives || [], [SPACE])),
+          ...withSpace(printFieldDefinitionSet(node.fields)),
+        ],
+        l,
+      };
+    },
+    InterfaceTypeExtension(node) {
+      const l = node.loc;
+      return {
+        p: [
+          ...getComments(
+            l?.startToken,
+            next(l?.startToken.next, TokenKind.NAME),
+            node.name.l?.endToken
+          ),
+          text("extend interface "),
+          ...node.name.p,
+          ...printDelimitedList(node.interfaces, node.kind),
+          ...withSpace(join(node.directives || [], [SPACE])),
+          ...withSpace(printFieldDefinitionSet(node.fields)),
+        ],
+        l,
+      };
+    },
+    IntValue(node) {
+      const l = node.loc;
+      return {
+        p: [...getComments(l?.endToken), text(node.value)],
+        l,
+      };
+    },
+    ListType(node) {
+      const l = node.loc;
+      const { comments, rest } = filterComments(node.type.p);
+      return {
+        p: [
+          ...getComments(l?.startToken),
+          ...comments,
+          ...getComments(l?.endToken),
+          text("["),
+          ...rest,
+          text("]"),
+        ],
+        l,
+      };
+    },
+    ListValue(node) {
+      const l = node.loc;
+      return {
+        p: isEmpty(node.values)
+          ? [
+              ...getComments(l?.startToken),
+              text(TokenKind.BRACKET_L),
+              ...getComments(l?.endToken),
+              text(TokenKind.BRACKET_R),
+            ]
+          : printWrappedListWithComments(
+              node.values,
+              BRACKETS,
+              "",
+              "," + SPACE.v
             ),
-            ...withSpace(join(node.directives || [], [SPACE])),
-            ...withSpace(printFieldDefinitionSet(node.fields)),
-          ],
-          l,
-        };
-      },
+        l,
+      };
     },
-    ObjectTypeExtension: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [
-            ...getComments(
-              l?.startToken,
-              next(l?.startToken.next, TokenKind.NAME),
-              node.name.l?.endToken
-            ),
-            text("extend type "),
-            ...node.name.p,
-            ...printDelimitedList(
-              node.interfaces,
-              node.kind as unknown as DelimitedListKinds
-            ),
-            ...withSpace(join(node.directives || [], [SPACE])),
-            ...withSpace(printFieldDefinitionSet(node.fields)),
-          ],
-          l,
-        };
-      },
+    Name(node) {
+      return { p: [text(node.value)], l: node.loc };
     },
-    ObjectValue: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: isEmpty(node.fields)
-            ? [
-                ...getComments(l?.startToken),
-                text(TokenKind.BRACE_L),
-                ...getComments(l?.endToken),
-                text(TokenKind.BRACE_R),
-              ]
-            : printWrappedListWithComments(
-                node.fields,
-                BRACES,
-                SPACE.v,
-                "," + SPACE.v
-              ),
-          l,
-        };
-      },
+    NamedType(node) {
+      const l = node.loc;
+      return {
+        p: [...getComments(l?.endToken), ...node.name.p],
+        l,
+      };
     },
-    OperationDefinition: {
-      leave(node) {
-        const l = node.loc as Location;
+    NonNullType(node) {
+      const l = node.loc;
+      const { comments, rest } = filterComments(node.type.p);
+      return {
+        p: [...comments, ...getComments(l?.endToken), ...rest, text("!")],
+        l,
+      };
+    },
+    NullValue(node) {
+      const l = node.loc;
+      return {
+        p: [...getComments(l?.endToken), text("null")],
+        l,
+      };
+    },
+    ObjectField(node) {
+      const l = node.loc;
+      return {
+        p: [
+          ...getComments(
+            node.name.l?.endToken,
+            next(node.name.l?.endToken.next, TokenKind.COLON)
+          ),
+          ...node.name.p,
+          text(":"),
+          SPACE,
+          ...node.value.p,
+        ],
+        l,
+      };
+    },
+    ObjectTypeDefinition(node) {
+      const l = node.loc;
 
-        const keywordToken = l?.startToken;
-
-        // Query shorthand
-        if (keywordToken?.kind === TokenKind.BRACE_L) return node.selectionSet;
-
-        return {
-          p: [
-            ...getComments(keywordToken, node.name?.l?.endToken),
-            text(node.operation as unknown as OperationTypeNode),
-            ...(node.name ? [text(" "), ...node.name.p] : []),
-            ...(isEmpty(node.variableDefinitions)
-              ? []
-              : printWrappedListWithComments(
-                  node.variableDefinitions,
-                  PARENS,
-                  "",
-                  "," + SPACE.v
-                )),
-            ...withSpace(join(node.directives || [], [SPACE])),
-            ...withSpace(node.selectionSet.p),
-          ],
-          l,
-        };
-      },
-    },
-    OperationTypeDefinition: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [
-            ...getComments(
-              l?.startToken,
-              next(l?.startToken.next, TokenKind.COLON)
-            ),
-            text(node.operation as unknown as OperationTypeNode),
-            text(":"),
-            SPACE,
-            ...node.type.p,
-          ],
-          l,
-        };
-      },
-    },
-    ScalarTypeDefinition: {
-      leave(node) {
-        const l = node.loc as Location;
-
-        const comments = getComments(
+      const comments = [
+        ...getComments(
           next(l?.startToken, TokenKind.NAME),
           node.name.l?.endToken
-        );
+        ),
+      ];
 
-        return {
-          p: [
-            ...printDescription(node.description, comments),
-            ...comments,
-            text("scalar "),
-            ...node.name.p,
-            ...withSpace(join(node.directives || [], [SPACE])),
-          ],
-          l,
-        };
-      },
+      return {
+        p: [
+          ...printDescription(node.description, comments),
+          ...comments,
+          text("type "),
+          ...node.name.p,
+          ...printDelimitedList(node.interfaces, node.kind),
+          ...withSpace(join(node.directives || [], [SPACE])),
+          ...withSpace(printFieldDefinitionSet(node.fields)),
+        ],
+        l,
+      };
     },
-    ScalarTypeExtension: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [
-            ...getComments(
-              l?.startToken,
-              next(l?.startToken.next, TokenKind.NAME),
-              node.name.l?.endToken
-            ),
-            text("extend scalar "),
-            ...node.name.p,
-            ...withSpace(join(node.directives || [], [SPACE])),
-          ],
-          l,
-        };
-      },
-    },
-    SchemaDefinition: {
-      leave(node) {
-        const l = node.loc as Location;
-
-        const comments = getComments(next(l?.startToken, TokenKind.NAME));
-
-        return {
-          p: [
-            ...printDescription(node.description, comments),
-            ...comments,
-            text("schema"),
-            ...withSpace(join(node.directives || [], [SPACE])),
-            ...withSpace(printOperationTypeDefinitionSet(node.operationTypes)),
-          ],
-          l,
-        };
-      },
-    },
-    SchemaExtension: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [
-            ...getComments(
-              l?.startToken,
-              next(l?.startToken.next, TokenKind.NAME)
-            ),
-            text("extend schema"),
-            ...withSpace(join(node.directives || [], [SPACE])),
-            ...withSpace(printOperationTypeDefinitionSet(node.operationTypes)),
-          ],
-          l,
-        };
-      },
-    },
-    SelectionSet: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: printWrappedListWithComments(
-            node.selections,
-            BRACES,
-            "",
-            ",",
-            true
+    ObjectTypeExtension(node) {
+      const l = node.loc;
+      return {
+        p: [
+          ...getComments(
+            l?.startToken,
+            next(l?.startToken.next, TokenKind.NAME),
+            node.name.l?.endToken
           ),
-          l,
-        };
-      },
+          text("extend type "),
+          ...node.name.p,
+          ...printDelimitedList(node.interfaces, node.kind),
+          ...withSpace(join(node.directives || [], [SPACE])),
+          ...withSpace(printFieldDefinitionSet(node.fields)),
+        ],
+        l,
+      };
     },
-    StringValue: {
-      leave(node) {
-        /**
-         * We don't use `getCommentsForToken` here because of the special case
-         * where block string tokens are the only kinds of tokens that might
-         * span multiple lines, and `graphql-js` only provides the starting
-         * line for a token in `token.line` but not the ending line. (Instead
-         * we calculate that ourselves by looking at the complete source body.)
-         */
+    ObjectValue(node) {
+      const l = node.loc;
+      return {
+        p: isEmpty(node.fields)
+          ? [
+              ...getComments(l?.startToken),
+              text(TokenKind.BRACE_L),
+              ...getComments(l?.endToken),
+              text(TokenKind.BRACE_R),
+            ]
+          : printWrappedListWithComments(
+              node.fields,
+              BRACES,
+              SPACE.v,
+              "," + SPACE.v
+            ),
+        l,
+      };
+    },
+    OperationDefinition(node) {
+      const l = node.loc;
 
-        const l = node.loc as Location;
-        const token = l?.endToken;
+      const keywordToken = l?.startToken;
 
-        const comments: Comment[] = [];
-        if (preserveComments && l && token) {
-          let running = token.prev;
-          while (
-            running?.kind === TokenKind.COMMENT &&
-            running.line !== running.prev?.line
-          ) {
-            comments.unshift({ t: "block_comment", v: running.value });
-            running = running.prev;
-          }
+      // Query shorthand
+      if (keywordToken?.kind === TokenKind.BRACE_L) return node.selectionSet;
 
-          const line =
-            token.kind === TokenKind.BLOCK_STRING
-              ? l.source.body.slice(0, token.end).split("\n").length
-              : token.line;
-          if (
-            token.next?.kind === TokenKind.COMMENT &&
-            token.next.line === line
-          )
-            comments.push({ t: "inline_comment", v: token.next.value });
+      return {
+        p: [
+          ...getComments(keywordToken, node.name?.l?.endToken),
+          text(node.operation),
+          ...(node.name ? [text(" "), ...node.name.p] : []),
+          ...(isEmpty(node.variableDefinitions)
+            ? []
+            : printWrappedListWithComments(
+                node.variableDefinitions,
+                PARENS,
+                "",
+                "," + SPACE.v
+              )),
+          ...withSpace(join(node.directives || [], [SPACE])),
+          ...withSpace(node.selectionSet.p),
+        ],
+        l,
+      };
+    },
+    OperationTypeDefinition(node) {
+      const l = node.loc;
+      return {
+        p: [
+          ...getComments(
+            l?.startToken,
+            next(l?.startToken.next, TokenKind.COLON)
+          ),
+          text(node.operation),
+          text(":"),
+          SPACE,
+          ...node.type.p,
+        ],
+        l,
+      };
+    },
+    ScalarTypeDefinition(node) {
+      const l = node.loc;
+
+      const comments = getComments(
+        next(l?.startToken, TokenKind.NAME),
+        node.name.l?.endToken
+      );
+
+      return {
+        p: [
+          ...printDescription(node.description, comments),
+          ...comments,
+          text("scalar "),
+          ...node.name.p,
+          ...withSpace(join(node.directives || [], [SPACE])),
+        ],
+        l,
+      };
+    },
+    ScalarTypeExtension(node) {
+      const l = node.loc;
+      return {
+        p: [
+          ...getComments(
+            l?.startToken,
+            next(l?.startToken.next, TokenKind.NAME),
+            node.name.l?.endToken
+          ),
+          text("extend scalar "),
+          ...node.name.p,
+          ...withSpace(join(node.directives || [], [SPACE])),
+        ],
+        l,
+      };
+    },
+    SchemaDefinition(node) {
+      const l = node.loc;
+
+      const comments = getComments(next(l?.startToken, TokenKind.NAME));
+
+      return {
+        p: [
+          ...printDescription(node.description, comments),
+          ...comments,
+          text("schema"),
+          ...withSpace(join(node.directives || [], [SPACE])),
+          ...withSpace(printOperationTypeDefinitionSet(node.operationTypes)),
+        ],
+        l,
+      };
+    },
+    SchemaExtension(node) {
+      const l = node.loc;
+      return {
+        p: [
+          ...getComments(
+            l?.startToken,
+            next(l?.startToken.next, TokenKind.NAME)
+          ),
+          text("extend schema"),
+          ...withSpace(join(node.directives || [], [SPACE])),
+          ...withSpace(printOperationTypeDefinitionSet(node.operationTypes)),
+        ],
+        l,
+      };
+    },
+    SelectionSet(node) {
+      return {
+        p: printWrappedListWithComments(node.selections, BRACES, "", ",", true),
+        l: node.loc,
+      };
+    },
+    StringValue(node) {
+      /**
+       * We don't use `getCommentsForToken` here because of the special case
+       * where block string tokens are the only kinds of tokens that might
+       * span multiple lines, and `graphql-js` only provides the starting
+       * line for a token in `token.line` but not the ending line. (Instead
+       * we calculate that ourselves by looking at the complete source body.)
+       */
+
+      const l = node.loc;
+      const token = l?.endToken;
+
+      const comments: Comment[] = [];
+      if (preserveComments && l && token) {
+        let running = token.prev;
+        while (
+          running?.kind === TokenKind.COMMENT &&
+          running.line !== running.prev?.line
+        ) {
+          comments.unshift({ t: "block_comment", v: running.value });
+          running = running.prev;
         }
 
-        return {
-          p: [
-            ...comments,
-            ...((node.block as unknown as boolean)
-              ? [
-                  text('"""'),
-                  ...(/[\n\r]/.test(node.value as unknown as string)
-                    ? [hardLine()]
-                    : []),
-                  text(
-                    (node.value as unknown as string).replace(/"""/g, '\\"""')
-                  ),
-                  ...(/[\n\r]/.test(node.value as unknown as string)
-                    ? [hardLine()]
-                    : []),
-                  text('"""'),
-                ]
-              : [text(JSON.stringify(node.value))]),
-          ],
-          l,
-        };
-      },
-    },
-    UnionTypeDefinition: {
-      leave(node) {
-        const l = node.loc as Location;
+        const line =
+          token.kind === TokenKind.BLOCK_STRING
+            ? l.source.body.slice(0, token.end).split("\n").length
+            : token.line;
+        if (token.next?.kind === TokenKind.COMMENT && token.next.line === line)
+          comments.push({ t: "inline_comment", v: token.next.value });
+      }
 
-        const comments = getComments(
-          next(l?.startToken, TokenKind.NAME),
-          node.name.l?.endToken
-        );
-
-        return {
-          p: [
-            ...printDescription(node.description, comments),
-            ...comments,
-            text("union "),
-            ...node.name.p,
-            ...withSpace(join(node.directives || [], [SPACE])),
-            ...printDelimitedList(
-              node.types,
-              node.kind as unknown as DelimitedListKinds
-            ),
-          ],
-          l,
-        };
-      },
+      return {
+        p: [
+          ...comments,
+          ...(node.block
+            ? [
+                text('"""'),
+                ...(/[\n\r]/.test(node.value) ? [hardLine()] : []),
+                text(node.value.replace(/"""/g, '\\"""')),
+                ...(/[\n\r]/.test(node.value) ? [hardLine()] : []),
+                text('"""'),
+              ]
+            : [text(JSON.stringify(node.value))]),
+        ],
+        l,
+      };
     },
-    UnionTypeExtension: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [
-            ...getComments(
-              l?.startToken,
-              next(l?.startToken.next, TokenKind.NAME),
-              node.name.l?.endToken
-            ),
-            text("extend union "),
-            ...node.name.p,
-            ...withSpace(join(node.directives || [], [SPACE])),
-            ...printDelimitedList(
-              node.types,
-              node.kind as unknown as DelimitedListKinds
-            ),
-          ],
-          l,
-        };
-      },
-    },
-    Variable: {
-      leave(node) {
-        const l = node.loc as Location;
-        return {
-          p: [
-            ...getComments(l?.startToken, l?.endToken),
-            text("$"),
-            ...node.name.p,
-          ],
-          l,
-        };
-      },
-    },
-    VariableDefinition: {
-      leave(node) {
-        const l = node.loc as Location;
+    UnionTypeDefinition(node) {
+      const l = node.loc;
 
-        const { comments, rest } = filterComments(node.variable.p);
+      const comments = getComments(
+        next(l?.startToken, TokenKind.NAME),
+        node.name.l?.endToken
+      );
 
-        return {
-          p: [
-            ...comments,
-            ...getComments(next(l?.startToken.next, TokenKind.COLON)),
-            ...rest,
-            text(":"),
-            SPACE,
-            ...node.type.p,
-            ...printDefaultValue(node.defaultValue),
-            ...withSpace(join(node.directives || [], [SPACE])),
-          ],
-          l,
-        };
-      },
+      return {
+        p: [
+          ...printDescription(node.description, comments),
+          ...comments,
+          text("union "),
+          ...node.name.p,
+          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDelimitedList(node.types, node.kind),
+        ],
+        l,
+      };
+    },
+    UnionTypeExtension(node) {
+      const l = node.loc;
+      return {
+        p: [
+          ...getComments(
+            l?.startToken,
+            next(l?.startToken.next, TokenKind.NAME),
+            node.name.l?.endToken
+          ),
+          text("extend union "),
+          ...node.name.p,
+          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDelimitedList(node.types, node.kind),
+        ],
+        l,
+      };
+    },
+    Variable(node) {
+      const l = node.loc;
+      return {
+        p: [
+          ...getComments(l?.startToken, l?.endToken),
+          text("$"),
+          ...node.name.p,
+        ],
+        l,
+      };
+    },
+    VariableDefinition(node) {
+      const l = node.loc;
+
+      const { comments, rest } = filterComments(node.variable.p);
+
+      return {
+        p: [
+          ...comments,
+          ...getComments(next(l?.startToken.next, TokenKind.COLON)),
+          ...rest,
+          text(":"),
+          SPACE,
+          ...node.type.p,
+          ...printDefaultValue(node.defaultValue),
+          ...withSpace(join(node.directives || [], [SPACE])),
+        ],
+        l,
+      };
     },
   });
 
