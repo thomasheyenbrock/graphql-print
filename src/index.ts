@@ -77,6 +77,8 @@ function printAST(
 ): string {
   const SPACE: Text = { t: "text", v: minified ? "" : " " };
 
+  const source = ast.loc?.source.body;
+
   function getComments(
     ...tokens: [Maybe<Token>, ...Maybe<Token>[]]
   ): Comment[] {
@@ -98,7 +100,10 @@ function printAST(
         running = running.prev;
       }
 
-      const line = token.kind === TokenKind.BLOCK_STRING ? 0 : token.line;
+      const line =
+        token.kind === TokenKind.BLOCK_STRING && source
+          ? source.slice(0, token.end).split("\n").length
+          : token.line;
       if (token.next?.kind === TokenKind.COMMENT && token.next.line === line)
         comments.push({ t: "comment", v: token.next.value });
     }
@@ -898,39 +903,10 @@ function printAST(
       };
     },
     StringValue(node) {
-      /**
-       * We don't use `getCommentsForToken` here because of the special case
-       * where block string tokens are the only kinds of tokens that might
-       * span multiple lines, and `graphql-js` only provides the starting
-       * line for a token in `token.line` but not the ending line. (Instead
-       * we calculate that ourselves by looking at the complete source body.)
-       */
-
       const l = node.loc;
-      const token = l?.endToken;
-
-      const comments: Comment[] = [];
-      if (preserveComments && l && token) {
-        let running = token.prev;
-        while (
-          running?.kind === TokenKind.COMMENT &&
-          running.line !== running.prev?.line
-        ) {
-          comments.unshift({ t: "comment", v: running.value });
-          running = running.prev;
-        }
-
-        const line =
-          token.kind === TokenKind.BLOCK_STRING
-            ? l.source.body.slice(0, token.end).split("\n").length
-            : token.line;
-        if (token.next?.kind === TokenKind.COMMENT && token.next.line === line)
-          comments.push({ t: "comment", v: token.next.value });
-      }
-
       return {
         p: [
-          ...comments,
+          ...getComments(l?.endToken),
           ...(node.block
             ? [
                 text('"""'),
