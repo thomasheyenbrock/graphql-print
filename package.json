@@ -1,6 +1,6 @@
 {
   "name": "graphql-print",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Print any GraphQL AST node, pretty or minified, with or without comments",
   "keywords": [
     "graphql",
