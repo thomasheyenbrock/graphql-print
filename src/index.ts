@@ -6,8 +6,6 @@ type Maybe<T> = T | null | undefined;
 
 type Indentation = "+" | "-";
 
-type Text = { t: "text"; v: string };
-
 type SoftLine = {
   t: "soft_line";
   /** The characters that should be printed if no linebreak is necessary */
@@ -21,13 +19,9 @@ type HardLine = { t: "hard_line"; i?: Indentation };
 
 type Comment = { t: "comment"; v: string };
 
-type PrintToken = Text | SoftLine | HardLine | Comment;
+type PrintToken = string | SoftLine | HardLine | Comment;
 
 type TransformedNode = { p: PrintToken[]; l: Location | undefined };
-
-function text(value: string): Text {
-  return { t: "text", v: value };
-}
 
 function softLine(
   alt: string,
@@ -75,7 +69,7 @@ function printAST(
     minified = false,
   }: PrintOptions
 ): string {
-  const SPACE: Text = { t: "text", v: minified ? "" : " " };
+  const SPACE = minified ? "" : " ";
 
   const source = ast.loc?.source.body;
 
@@ -129,14 +123,14 @@ function printAST(
 
     return [
       ...openingBracket,
-      text(open),
+      open,
       shouldPrintMultiLine ? hardLine("+") : softLine(spacer, undefined, "+"),
       ...join(list, [shouldPrintMultiLine ? hardLine() : softLine(delimiter)]),
       shouldPrintMultiLine
         ? hardLine("-")
         : softLine(closingBracket.length > 0 ? "\n" : spacer, undefined, "-"),
       ...closingBracket,
-      text(close),
+      close,
     ];
   }
 
@@ -144,7 +138,7 @@ function printAST(
     args: Maybe<readonly TransformedNode[]>
   ): PrintToken[] {
     if (isEmpty(args)) return [];
-    return printWrappedListWithComments(args, PARENS, "", "," + SPACE.v);
+    return printWrappedListWithComments(args, PARENS, "", "," + SPACE);
   }
 
   function printInputValueDefinitionSet(
@@ -207,8 +201,8 @@ function printAST(
       parentKind === Kind.UNION_TYPE_EXTENSION
         ? [TokenKind.EQUALS, undefined, SPACE, TokenKind.PIPE]
         : parentKind === Kind.DIRECTIVE_DEFINITION
-        ? [TokenKind.NAME, "on", text(" "), TokenKind.PIPE]
-        : [TokenKind.NAME, "implements", text(" "), TokenKind.AMP];
+        ? [TokenKind.NAME, "on", " ", TokenKind.PIPE]
+        : [TokenKind.NAME, "implements", " ", TokenKind.AMP];
 
     let hasComments = false;
     const itemsWithComments: { comments: PrintToken[]; type: PrintToken[] }[] =
@@ -244,17 +238,17 @@ function printAST(
       prev(items[0].l?.startToken.prev, initializerKind, initializerValue)
     );
     if (itemList.length === 0) itemList.push(wrapInitializer);
-    itemList.push(text(initializerValue || initializerKind), wrapInitializer);
+    itemList.push(initializerValue || initializerKind, wrapInitializer);
 
     for (let i = 0; i < itemsWithComments.length; i++) {
       itemList.push(...itemsWithComments[i].comments);
 
-      if (minified && i > 0) itemList.push(text(delimiterKind));
+      if (minified && i > 0) itemList.push(delimiterKind);
 
       if (!minified) {
         if (hasComments && itemsWithComments[i].comments.length === 0)
           itemList.push(hardLine());
-        if (hasComments) itemList.push(text(delimiterKind + " "));
+        if (hasComments) itemList.push(delimiterKind + " ");
         else
           itemList.push(
             softLine(
@@ -298,7 +292,7 @@ function printAST(
       ...equalComments,
       ...comments,
       ...(equalComments.length > 0 || comments.length > 0 ? [] : [SPACE]),
-      text("="),
+      "=",
       SPACE,
       ...rest,
     ];
@@ -319,7 +313,7 @@ function printAST(
             next(node.name.l?.endToken.next, TokenKind.COLON)
           ),
           ...node.name.p,
-          text(":"),
+          ":",
           SPACE,
           ...node.value.p,
         ],
@@ -329,7 +323,7 @@ function printAST(
     BooleanValue(node) {
       const l = node.loc;
       return {
-        p: [...getComments(l?.endToken), text("" + node.value)],
+        p: [...getComments(l?.endToken), "" + node.value],
         l,
       };
     },
@@ -338,7 +332,7 @@ function printAST(
       return {
         p: [
           ...getComments(l?.startToken, node.name.l?.endToken),
-          text("@"),
+          "@",
           ...node.name.p,
           ...printArgumentSet(node.arguments),
         ],
@@ -369,19 +363,17 @@ function printAST(
         p: [
           ...printDescription(node.description, comments),
           ...comments,
-          text("directive"),
+          "directive",
           SPACE,
-          text(TokenKind.AT),
+          TokenKind.AT,
           ...node.name.p,
           ...printInputValueDefinitionSet(node.arguments, node.kind),
           ...repeatableComments,
-          text(
-            node.repeatable
-              ? repeatableComments.length > 0
-                ? "repeatable"
-                : " repeatable"
-              : ""
-          ),
+          node.repeatable
+            ? repeatableComments.length > 0
+              ? "repeatable"
+              : " repeatable"
+            : "",
           ...locations,
         ],
         l,
@@ -413,7 +405,7 @@ function printAST(
         p: [
           ...printDescription(node.description, comments),
           ...comments,
-          text("enum "),
+          "enum ",
           ...node.name.p,
           ...printDirectives(node.directives),
           ...withSpace(printEnumValueDefinitionSet(node.values)),
@@ -430,7 +422,7 @@ function printAST(
             next(l?.startToken.next, TokenKind.NAME),
             node.name.l?.endToken
           ),
-          text("extend enum "),
+          "extend enum ",
           ...node.name.p,
           ...printDirectives(node.directives),
           ...withSpace(printEnumValueDefinitionSet(node.values)),
@@ -441,7 +433,7 @@ function printAST(
     EnumValue(node) {
       const l = node.loc;
       return {
-        p: [...getComments(l?.endToken), text(node.value)],
+        p: [...getComments(l?.endToken), node.value],
         l,
       };
     },
@@ -466,7 +458,7 @@ function printAST(
             node.alias ? next(l?.startToken?.next, TokenKind.COLON) : null,
             node.name.l?.endToken
           ),
-          ...(node.alias ? [...node.alias.p, text(":"), SPACE] : []),
+          ...(node.alias ? [...node.alias.p, ":", SPACE] : []),
           ...node.name.p,
           ...printArgumentSet(node.arguments),
           ...printDirectives(node.directives),
@@ -485,7 +477,7 @@ function printAST(
           ...comments,
           ...node.name.p,
           ...printInputValueDefinitionSet(node.arguments, node.kind),
-          text(":"),
+          ":",
           SPACE,
           ...node.type.p,
           ...printDirectives(node.directives),
@@ -496,7 +488,7 @@ function printAST(
     FloatValue(node) {
       const l = node.loc;
       return {
-        p: [...getComments(l?.endToken), text(node.value)],
+        p: [...getComments(l?.endToken), node.value],
         l,
       };
     },
@@ -509,9 +501,9 @@ function printAST(
             node.name.l?.endToken,
             prev(node.typeCondition.l?.endToken.prev, TokenKind.NAME)
           ),
-          text("fragment "),
+          "fragment ",
           ...node.name.p,
-          text(" on "),
+          " on ",
           ...node.typeCondition.p,
           ...printDirectives(node.directives),
           ...withSpace(node.selectionSet.p),
@@ -524,7 +516,7 @@ function printAST(
       return {
         p: [
           ...getComments(l?.startToken, node.name.l?.endToken),
-          text("..."),
+          "...",
           ...node.name.p,
           ...printDirectives(node.directives),
         ],
@@ -541,8 +533,8 @@ function printAST(
               ? prev(node.typeCondition.l?.endToken.prev, TokenKind.NAME)
               : null
           ),
-          text("..."),
-          ...(node.typeCondition ? [text("on "), ...node.typeCondition.p] : []),
+          "...",
+          ...(node.typeCondition ? ["on ", ...node.typeCondition.p] : []),
           ...printDirectives(node.directives),
           ...withSpace(node.selectionSet.p),
         ],
@@ -561,7 +553,7 @@ function printAST(
         p: [
           ...printDescription(node.description, comments),
           ...comments,
-          text("input "),
+          "input ",
           ...node.name.p,
           ...printDirectives(node.directives),
           ...withSpace(printInputValueDefinitionSet(node.fields, node.kind)),
@@ -578,7 +570,7 @@ function printAST(
             next(l?.startToken?.next, TokenKind.NAME),
             node.name.l?.endToken
           ),
-          text("extend input "),
+          "extend input ",
           ...node.name.p,
           ...printDirectives(node.directives),
           ...withSpace(printInputValueDefinitionSet(node.fields, node.kind)),
@@ -597,7 +589,7 @@ function printAST(
           ...printDescription(node.description, comments),
           ...comments,
           ...node.name.p,
-          text(":"),
+          ":",
           SPACE,
           ...node.type.p,
           ...printDefaultValue(node.defaultValue),
@@ -618,7 +610,7 @@ function printAST(
         p: [
           ...printDescription(node.description, comments),
           ...comments,
-          text("interface "),
+          "interface ",
           ...node.name.p,
           ...printDelimitedList(node.interfaces, node.kind),
           ...printDirectives(node.directives),
@@ -636,7 +628,7 @@ function printAST(
             next(l?.startToken.next, TokenKind.NAME),
             node.name.l?.endToken
           ),
-          text("extend interface "),
+          "extend interface ",
           ...node.name.p,
           ...printDelimitedList(node.interfaces, node.kind),
           ...printDirectives(node.directives),
@@ -648,7 +640,7 @@ function printAST(
     IntValue(node) {
       const l = node.loc;
       return {
-        p: [...getComments(l?.endToken), text(node.value)],
+        p: [...getComments(l?.endToken), node.value],
         l,
       };
     },
@@ -660,9 +652,9 @@ function printAST(
           ...getComments(l?.startToken),
           ...comments,
           ...getComments(l?.endToken),
-          text("["),
+          "[",
           ...rest,
-          text("]"),
+          "]",
         ],
         l,
       };
@@ -673,21 +665,21 @@ function printAST(
         p: isEmpty(node.values)
           ? [
               ...getComments(l?.startToken),
-              text(TokenKind.BRACKET_L),
+              TokenKind.BRACKET_L,
               ...getComments(l?.endToken),
-              text(TokenKind.BRACKET_R),
+              TokenKind.BRACKET_R,
             ]
           : printWrappedListWithComments(
               node.values,
               BRACKETS,
               "",
-              "," + SPACE.v
+              "," + SPACE
             ),
         l,
       };
     },
     Name(node) {
-      return { p: [text(node.value)], l: node.loc };
+      return { p: [node.value], l: node.loc };
     },
     NamedType(node) {
       const l = node.loc;
@@ -700,14 +692,14 @@ function printAST(
       const l = node.loc;
       const { comments, rest } = filterComments(node.type.p);
       return {
-        p: [...comments, ...getComments(l?.endToken), ...rest, text("!")],
+        p: [...comments, ...getComments(l?.endToken), ...rest, "!"],
         l,
       };
     },
     NullValue(node) {
       const l = node.loc;
       return {
-        p: [...getComments(l?.endToken), text("null")],
+        p: [...getComments(l?.endToken), "null"],
         l,
       };
     },
@@ -720,7 +712,7 @@ function printAST(
             next(node.name.l?.endToken.next, TokenKind.COLON)
           ),
           ...node.name.p,
-          text(":"),
+          ":",
           SPACE,
           ...node.value.p,
         ],
@@ -741,7 +733,7 @@ function printAST(
         p: [
           ...printDescription(node.description, comments),
           ...comments,
-          text("type "),
+          "type ",
           ...node.name.p,
           ...printDelimitedList(node.interfaces, node.kind),
           ...printDirectives(node.directives),
@@ -759,7 +751,7 @@ function printAST(
             next(l?.startToken.next, TokenKind.NAME),
             node.name.l?.endToken
           ),
-          text("extend type "),
+          "extend type ",
           ...node.name.p,
           ...printDelimitedList(node.interfaces, node.kind),
           ...printDirectives(node.directives),
@@ -774,15 +766,15 @@ function printAST(
         p: isEmpty(node.fields)
           ? [
               ...getComments(l?.startToken),
-              text(TokenKind.BRACE_L),
+              TokenKind.BRACE_L,
               ...getComments(l?.endToken),
-              text(TokenKind.BRACE_R),
+              TokenKind.BRACE_R,
             ]
           : printWrappedListWithComments(
               node.fields,
               BRACES,
-              SPACE.v,
-              "," + SPACE.v
+              SPACE,
+              "," + SPACE
             ),
         l,
       };
@@ -798,15 +790,15 @@ function printAST(
       return {
         p: [
           ...getComments(keywordToken, node.name?.l?.endToken),
-          text(node.operation),
-          ...(node.name ? [text(" "), ...node.name.p] : []),
+          node.operation,
+          ...(node.name ? [" ", ...node.name.p] : []),
           ...(isEmpty(node.variableDefinitions)
             ? []
             : printWrappedListWithComments(
                 node.variableDefinitions,
                 PARENS,
                 "",
-                "," + SPACE.v
+                "," + SPACE
               )),
           ...printDirectives(node.directives),
           ...withSpace(node.selectionSet.p),
@@ -822,8 +814,8 @@ function printAST(
             l?.startToken,
             next(l?.startToken.next, TokenKind.COLON)
           ),
-          text(node.operation),
-          text(":"),
+          node.operation,
+          ":",
           SPACE,
           ...node.type.p,
         ],
@@ -842,7 +834,7 @@ function printAST(
         p: [
           ...printDescription(node.description, comments),
           ...comments,
-          text("scalar "),
+          "scalar ",
           ...node.name.p,
           ...printDirectives(node.directives),
         ],
@@ -858,7 +850,7 @@ function printAST(
             next(l?.startToken.next, TokenKind.NAME),
             node.name.l?.endToken
           ),
-          text("extend scalar "),
+          "extend scalar ",
           ...node.name.p,
           ...printDirectives(node.directives),
         ],
@@ -874,7 +866,7 @@ function printAST(
         p: [
           ...printDescription(node.description, comments),
           ...comments,
-          text("schema"),
+          "schema",
           ...printDirectives(node.directives),
           ...withSpace(printOperationTypeDefinitionSet(node.operationTypes)),
         ],
@@ -889,7 +881,7 @@ function printAST(
             l?.startToken,
             next(l?.startToken.next, TokenKind.NAME)
           ),
-          text("extend schema"),
+          "extend schema",
           ...printDirectives(node.directives),
           ...withSpace(printOperationTypeDefinitionSet(node.operationTypes)),
         ],
@@ -909,13 +901,13 @@ function printAST(
           ...getComments(l?.endToken),
           ...(node.block
             ? [
-                text('"""'),
+                '"""',
                 ...(/[\n\r]/.test(node.value) ? [hardLine()] : []),
-                text(node.value.replace(/"""/g, '\\"""')),
+                node.value.replace(/"""/g, '\\"""'),
                 ...(/[\n\r]/.test(node.value) ? [hardLine()] : []),
-                text('"""'),
+                '"""',
               ]
-            : [text(JSON.stringify(node.value))]),
+            : [JSON.stringify(node.value)]),
         ],
         l,
       };
@@ -932,7 +924,7 @@ function printAST(
         p: [
           ...printDescription(node.description, comments),
           ...comments,
-          text("union "),
+          "union ",
           ...node.name.p,
           ...printDirectives(node.directives),
           ...printDelimitedList(node.types, node.kind),
@@ -949,7 +941,7 @@ function printAST(
             next(l?.startToken.next, TokenKind.NAME),
             node.name.l?.endToken
           ),
-          text("extend union "),
+          "extend union ",
           ...node.name.p,
           ...printDirectives(node.directives),
           ...printDelimitedList(node.types, node.kind),
@@ -960,11 +952,7 @@ function printAST(
     Variable(node) {
       const l = node.loc;
       return {
-        p: [
-          ...getComments(l?.startToken, l?.endToken),
-          text("$"),
-          ...node.name.p,
-        ],
+        p: [...getComments(l?.startToken, l?.endToken), "$", ...node.name.p],
         l,
       };
     },
@@ -978,7 +966,7 @@ function printAST(
           ...comments,
           ...getComments(next(l?.startToken.next, TokenKind.COLON)),
           ...rest,
-          text(":"),
+          ":",
           SPACE,
           ...node.type.p,
           ...printDefaultValue(node.defaultValue),
@@ -1006,8 +994,17 @@ function printAST(
   for (let i = 0; i < list.p.length; i++) {
     const item = list.p[i];
     const isNextComment =
-      i < list.p.length - 1 && list.p[i + 1].t === "comment";
-    if (item.t === "hard_line" || (item.t === "soft_line" && isNextComment)) {
+      i < list.p.length - 1 &&
+      typeof list.p[i + 1] !== "string" &&
+      (list.p[i + 1] as Exclude<PrintToken, string>).t === "comment";
+    if (typeof item === "string") {
+      withoutSoftLineBreaks += item;
+      withSoftLineBreaks += item;
+      if (isNextComment) list.p.splice(i + 1, 0, hardLine());
+    } else if (
+      item.t === "hard_line" ||
+      (item.t === "soft_line" && isNextComment)
+    ) {
       withoutSoftLineBreaks = withoutSoftLineBreaks.trimEnd();
       withSoftLineBreaks = withSoftLineBreaks.trimEnd();
 
@@ -1030,12 +1027,8 @@ function printAST(
       withSoftLineBreaks += item.p;
 
       withoutSoftLineBreaks += item.a;
-    } else if (item.t === "text") {
-      withoutSoftLineBreaks += item.v;
-      withSoftLineBreaks += item.v;
-      if (isNextComment) list.p.splice(i + 1, 0, hardLine());
     } else if (preserveComments) {
-      printed += indentation + "#" + SPACE.v + item.v.trim() + "\n";
+      printed += indentation + "#" + SPACE + item.v.trim() + "\n";
     }
   }
   return printed.trim() + (minified ? "" : "\n");
@@ -1043,15 +1036,16 @@ function printAST(
 
 type FilteredComments = {
   comments: Comment[];
-  rest: (Text | SoftLine | HardLine)[];
+  rest: (string | SoftLine | HardLine)[];
 };
 
 function filterComments(tokens: PrintToken[]): FilteredComments {
   const comments: Comment[] = [];
-  const rest: (Text | SoftLine | HardLine)[] = [];
+  const rest: (string | SoftLine | HardLine)[] = [];
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
-    if (token.t === "comment") comments.push(token);
+    if (typeof token !== "string" && token.t === "comment")
+      comments.push(token);
     else rest.push(token);
   }
   return { comments, rest };
@@ -1103,7 +1097,11 @@ function hasHardLine(list: readonly TransformedNode[]): boolean {
   for (let i = 0; i < list.length; i++)
     for (let j = 0; j < list[i].p.length; j++) {
       const item = list[i].p[j];
-      if (item.t === "hard_line" || item.t === "comment") return true;
+      if (
+        typeof item !== "string" &&
+        (item.t === "hard_line" || item.t === "comment")
+      )
+        return true;
     }
   return false;
 }
