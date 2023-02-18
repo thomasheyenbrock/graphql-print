@@ -378,17 +378,14 @@ function printAST(
     },
     Document(node) {
       const l = node.loc;
-      const comments = getComments(l?.endToken);
       return {
         p: [
           ...join(node.definitions, [
             hardLine(),
             ...(minified ? [] : [hardLine()]),
           ]),
-          ...(minified || comments.length === 0
-            ? []
-            : [hardLine(), hardLine()]),
-          ...comments,
+          ...(minified ? [] : [hardLine(), hardLine()]),
+          ...getComments(l?.endToken),
         ],
         l,
       };
@@ -1010,77 +1007,55 @@ function printAST(
     },
   });
 
-  for (let i = 0; i < list.p.length; i++) {
-    const item = list.p[i];
-    if (item.t === "comment") {
-      if (preserveComments) {
-        if (i > 0) {
-          const type = list.p[i - 1].t;
-          if (type === "text") {
-            list.p.splice(i, 0, hardLine());
-            i++;
-          } else if (type === "soft_line") list.p[i - 1] = hardLine();
-        }
-        list.p.splice(i, 1, text("#"), SPACE, text(item.v.trim()), hardLine());
-      }
-    }
-  }
+  /** To make sure the last line is always printed */
+  list.p.push(hardLine());
 
   let printed = "";
-  let currentLine: (Text | SoftLine)[] = [];
+  let withoutSoftLineBreaks = "";
+  let withSoftLineBreaks = "";
   let indentation = "";
 
   function handleIndentation(i?: Indentation): void {
+    if (minified) return;
     if (i === "+") indentation += indentationStep;
     if (i === "-") indentation = indentation.slice(indentationStep.length);
   }
 
-  function printLine(list: (Text | SoftLine)[], breakLines: boolean): string {
-    let printed = "";
-    for (let i = 0; i < list.length; i++) {
-      const item = list[i];
-      switch (item.t) {
-        case "text":
-          printed += item.v;
-          break;
-        case "soft_line":
-          if (breakLines) {
-            printed = printed.trimEnd();
-            handleIndentation(item.i);
-            printed += "\n" + indentation;
-            printed += item.p;
-          } else {
-            printed += item.a;
-          }
-          break;
-      }
-    }
-    return printed.trimEnd();
-  }
-
-  function printCurrentLine(): void {
-    const printedLine = indentation + printLine(currentLine, false);
-    if (minified || printedLine.length <= maxLineLength) {
-      printed += printedLine;
-    } else {
-      printed += indentation;
-      printed += printLine(currentLine, true);
-    }
-
-    currentLine = [];
-  }
-
   for (let i = 0; i < list.p.length; i++) {
-    const item = list.p[i] as Text | SoftLine | HardLine;
-    if (item.t === "hard_line") {
-      printCurrentLine();
+    const item = list.p[i];
+    const isNextComment =
+      i < list.p.length - 1 && list.p[i + 1].t === "comment";
+    if (item.t === "hard_line" || (item.t === "soft_line" && isNextComment)) {
+      withoutSoftLineBreaks = withoutSoftLineBreaks.trimEnd();
+      withSoftLineBreaks = withSoftLineBreaks.trimEnd();
+
+      printed +=
+        indentation +
+        (minified ||
+        indentation.length + withoutSoftLineBreaks.length <= maxLineLength
+          ? withoutSoftLineBreaks
+          : withSoftLineBreaks);
+
       handleIndentation(item.i);
       printed += "\n";
-    } else {
-      currentLine.push(item);
+
+      withoutSoftLineBreaks = "";
+      withSoftLineBreaks = "";
+    } else if (item.t === "soft_line") {
+      withSoftLineBreaks = withSoftLineBreaks.trimEnd();
+      handleIndentation(item.i);
+      withSoftLineBreaks += "\n" + indentation;
+      withSoftLineBreaks += item.p;
+
+      withoutSoftLineBreaks += item.a;
+    } else if (item.t === "text") {
+      withoutSoftLineBreaks += item.v;
+      withSoftLineBreaks += item.v;
+      if (isNextComment) list.p.splice(i + 1, 0, hardLine());
+    } else if (preserveComments) {
+      printed += indentation + "#" + SPACE.v + item.v.trim() + "\n";
     }
   }
-  printCurrentLine();
   return printed.trim() + (minified ? "" : "\n");
 }
 
