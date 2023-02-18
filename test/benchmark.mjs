@@ -22,11 +22,17 @@ async function main() {
   execSync(ref ? `git checkout ${ref}` : "git stash");
   execSync("pnpm build");
 
-  const sizeOld = statSync(join(__dirname, "../dist/index.js")).size;
-  const sizeNew = statSync(join(__dirname, "../dist-new/index.js")).size;
-  console.log("old x " + sizeOld.toLocaleString() + " bytes");
-  console.log("new x " + sizeNew.toLocaleString() + " bytes");
-  console.log((sizeNew < sizeOld ? "new" : "old") + " is smaller\n");
+  const sizeCjsOld = statSync(join(__dirname, "../dist/index.js")).size;
+  const sizeCjsNew = statSync(join(__dirname, "../dist-new/index.js")).size;
+  console.log("cjs old x " + sizeCjsOld.toLocaleString() + " bytes");
+  console.log("cjs new x " + sizeCjsNew.toLocaleString() + " bytes");
+  console.log((sizeCjsNew < sizeCjsOld ? "new" : "old") + " is smaller\n");
+
+  const sizeEsmOld = statSync(join(__dirname, "../dist/index.mjs")).size;
+  const sizeEsmNew = statSync(join(__dirname, "../dist-new/index.mjs")).size;
+  console.log("esm old x " + sizeEsmOld.toLocaleString() + " bytes");
+  console.log("esm new x " + sizeEsmNew.toLocaleString() + " bytes");
+  console.log((sizeEsmNew < sizeEsmOld ? "new" : "old") + " is smaller\n");
 
   const { print: printOld } = await import(
     join(__dirname, "../dist/index.mjs")
