@@ -19,7 +19,7 @@ type SoftLine = {
 
 type HardLine = { t: "hard_line"; i?: Indentation };
 
-type Comment = { t: "block_comment" | "inline_comment"; v: string };
+type Comment = { t: "comment"; v: string };
 
 type PrintToken = Text | SoftLine | HardLine | Comment;
 
@@ -94,16 +94,13 @@ function printAST(
         running?.kind === TokenKind.COMMENT &&
         running.line !== running.prev?.line
       ) {
-        comments.splice(currentComments, 0, {
-          t: "block_comment",
-          v: running.value,
-        });
+        comments.splice(currentComments, 0, { t: "comment", v: running.value });
         running = running.prev;
       }
 
       const line = token.kind === TokenKind.BLOCK_STRING ? 0 : token.line;
       if (token.next?.kind === TokenKind.COMMENT && token.next.line === line)
-        comments.push({ t: "inline_comment", v: token.next.value });
+        comments.push({ t: "comment", v: token.next.value });
     }
 
     return comments;
@@ -916,7 +913,7 @@ function printAST(
           running?.kind === TokenKind.COMMENT &&
           running.line !== running.prev?.line
         ) {
-          comments.unshift({ t: "block_comment", v: running.value });
+          comments.unshift({ t: "comment", v: running.value });
           running = running.prev;
         }
 
@@ -925,7 +922,7 @@ function printAST(
             ? l.source.body.slice(0, token.end).split("\n").length
             : token.line;
         if (token.next?.kind === TokenKind.COMMENT && token.next.line === line)
-          comments.push({ t: "inline_comment", v: token.next.value });
+          comments.push({ t: "comment", v: token.next.value });
       }
 
       return {
@@ -1015,7 +1012,7 @@ function printAST(
 
   for (let i = 0; i < list.p.length; i++) {
     const item = list.p[i];
-    if (item.t === "block_comment" || item.t === "inline_comment") {
+    if (item.t === "comment") {
       if (preserveComments) {
         if (i > 0) {
           const type = list.p[i - 1].t;
@@ -1097,14 +1094,8 @@ function filterComments(tokens: PrintToken[]): FilteredComments {
   const rest: (Text | SoftLine | HardLine)[] = [];
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
-    switch (token.t) {
-      case "block_comment":
-      case "inline_comment":
-        comments.push(token);
-        break;
-      default:
-        rest.push(token);
-    }
+    if (token.t === "comment") comments.push(token);
+    else rest.push(token);
   }
   return { comments, rest };
 }
@@ -1155,12 +1146,7 @@ function hasHardLine(list: readonly TransformedNode[]): boolean {
   for (let i = 0; i < list.length; i++)
     for (let j = 0; j < list[i].p.length; j++) {
       const item = list[i].p[j];
-      if (
-        item.t === "hard_line" ||
-        item.t === "block_comment" ||
-        item.t === "inline_comment"
-      )
-        return true;
+      if (item.t === "hard_line" || item.t === "comment") return true;
     }
   return false;
 }
