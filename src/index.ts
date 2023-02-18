@@ -299,6 +299,12 @@ function printAST(
     ];
   }
 
+  function printDirectives(
+    directives: Maybe<readonly TransformedNode[]>
+  ): PrintToken[] {
+    return withSpace(join(directives || [], [SPACE]));
+  }
+
   const list = visit<TransformedNode>(ast, {
     Argument(node) {
       return {
@@ -404,7 +410,7 @@ function printAST(
           ...comments,
           text("enum "),
           ...node.name.p,
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
           ...withSpace(printEnumValueDefinitionSet(node.values)),
         ],
         l,
@@ -421,7 +427,7 @@ function printAST(
           ),
           text("extend enum "),
           ...node.name.p,
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
           ...withSpace(printEnumValueDefinitionSet(node.values)),
         ],
         l,
@@ -441,7 +447,7 @@ function printAST(
           ...printDescription(node.description, comments),
           ...comments,
           ...node.name.p,
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
         ],
         l: node.loc,
       };
@@ -458,7 +464,7 @@ function printAST(
           ...(node.alias ? [...node.alias.p, text(":"), SPACE] : []),
           ...node.name.p,
           ...printArgumentSet(node.arguments),
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
           ...withSpace(node.selectionSet?.p || []),
         ],
         l,
@@ -477,7 +483,7 @@ function printAST(
           text(":"),
           SPACE,
           ...node.type.p,
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
         ],
         l: node.loc,
       };
@@ -502,7 +508,7 @@ function printAST(
           ...node.name.p,
           text(" on "),
           ...node.typeCondition.p,
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
           ...withSpace(node.selectionSet.p),
         ],
         l,
@@ -515,7 +521,7 @@ function printAST(
           ...getComments(l?.startToken, node.name.l?.endToken),
           text("..."),
           ...node.name.p,
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
         ],
         l,
       };
@@ -532,7 +538,7 @@ function printAST(
           ),
           text("..."),
           ...(node.typeCondition ? [text("on "), ...node.typeCondition.p] : []),
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
           ...withSpace(node.selectionSet.p),
         ],
         l,
@@ -552,7 +558,7 @@ function printAST(
           ...comments,
           text("input "),
           ...node.name.p,
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
           ...withSpace(printInputValueDefinitionSet(node.fields, node.kind)),
         ],
         l,
@@ -569,7 +575,7 @@ function printAST(
           ),
           text("extend input "),
           ...node.name.p,
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
           ...withSpace(printInputValueDefinitionSet(node.fields, node.kind)),
         ],
         l,
@@ -590,7 +596,7 @@ function printAST(
           SPACE,
           ...node.type.p,
           ...printDefaultValue(node.defaultValue),
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
         ],
         l: node.loc,
       };
@@ -610,7 +616,7 @@ function printAST(
           text("interface "),
           ...node.name.p,
           ...printDelimitedList(node.interfaces, node.kind),
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
           ...withSpace(printFieldDefinitionSet(node.fields)),
         ],
         l,
@@ -628,7 +634,7 @@ function printAST(
           text("extend interface "),
           ...node.name.p,
           ...printDelimitedList(node.interfaces, node.kind),
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
           ...withSpace(printFieldDefinitionSet(node.fields)),
         ],
         l,
@@ -733,7 +739,7 @@ function printAST(
           text("type "),
           ...node.name.p,
           ...printDelimitedList(node.interfaces, node.kind),
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
           ...withSpace(printFieldDefinitionSet(node.fields)),
         ],
         l,
@@ -751,7 +757,7 @@ function printAST(
           text("extend type "),
           ...node.name.p,
           ...printDelimitedList(node.interfaces, node.kind),
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
           ...withSpace(printFieldDefinitionSet(node.fields)),
         ],
         l,
@@ -797,7 +803,7 @@ function printAST(
                 "",
                 "," + SPACE.v
               )),
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
           ...withSpace(node.selectionSet.p),
         ],
         l,
@@ -833,7 +839,7 @@ function printAST(
           ...comments,
           text("scalar "),
           ...node.name.p,
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
         ],
         l,
       };
@@ -849,7 +855,7 @@ function printAST(
           ),
           text("extend scalar "),
           ...node.name.p,
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
         ],
         l,
       };
@@ -864,7 +870,7 @@ function printAST(
           ...printDescription(node.description, comments),
           ...comments,
           text("schema"),
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
           ...withSpace(printOperationTypeDefinitionSet(node.operationTypes)),
         ],
         l,
@@ -879,7 +885,7 @@ function printAST(
             next(l?.startToken.next, TokenKind.NAME)
           ),
           text("extend schema"),
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
           ...withSpace(printOperationTypeDefinitionSet(node.operationTypes)),
         ],
         l,
@@ -952,7 +958,7 @@ function printAST(
           ...comments,
           text("union "),
           ...node.name.p,
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
           ...printDelimitedList(node.types, node.kind),
         ],
         l,
@@ -969,7 +975,7 @@ function printAST(
           ),
           text("extend union "),
           ...node.name.p,
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
           ...printDelimitedList(node.types, node.kind),
         ],
         l,
@@ -1000,7 +1006,7 @@ function printAST(
           SPACE,
           ...node.type.p,
           ...printDefaultValue(node.defaultValue),
-          ...withSpace(join(node.directives || [], [SPACE])),
+          ...printDirectives(node.directives),
         ],
         l,
       };
